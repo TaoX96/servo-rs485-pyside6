@@ -1,8 +1,9 @@
-# A6-RS register map used by this project
+# A6-RS documentary register catalog and codec assumptions
 
-This is design evidence for the future Raspberry Pi motion service. The Windows GUI must
-never use this map, open RS485, or read or write these registers. No register access exists
-through Milestone 1. Future operator API operations remain high-level and allowlisted;
+This is design evidence for the future Raspberry Pi motion service. Milestone 3 provides
+a pure codec and immutable catalog, not a transport. The Windows GUI must never use this
+map, open RS485, or read or write these registers. No register access exists through
+Milestone 3. Future operator API operations remain high-level and allowlisted;
 this table must not be exposed as a general-purpose register interface.
 
 All entries must be verified against the supplied A6-RS parameter-list PDF and the exact
@@ -12,6 +13,55 @@ The communication baseline is Modbus RTU, slave 1, 9600 baud, 8 data bits, no pa
 1 stop bit, and a 1 second timeout. Legacy MinimalModbus code used
 `BYTEORDER_LITTLE` for 32-bit values, but byte and word order remain unverified for the
 target drive and firmware. No persistent register is written at startup or reconnection.
+
+## Primitive and layout model
+
+The codec supports strict `U16`, `I16`, `U32`, and `I32` values with their standard
+numeric ranges and signed two's-complement representation. It rejects booleans,
+non-integers, out-of-range values, invalid 16-bit words, and wrong word counts without
+truncation, wrapping, clipping, saturation, or implicit rounding.
+
+`ByteOrder.BIG` and `ByteOrder.LITTLE` describe byte order inside each 16-bit word.
+`WordOrder.HIGH_WORD_FIRST` and `WordOrder.LOW_WORD_FIRST` describe the ordering of two
+words. All four 32-bit combinations are supported, but every call requires an explicit
+layout. None is a verified hardware default. The legacy MinimalModbus
+`BYTEORDER_LITTLE` setting remains historical evidence only because that single name does
+not independently identify byte and word order.
+
+## Address notation
+
+Manual labels such as `C11.06` and `U41.0A`, parameter group/index notation, numeric
+runtime addresses, and transport-library addresses are distinct. Catalog numeric values
+preserve the historical project map exactly. The codec neither derives an address from a
+manual label nor adds or subtracts one. The target drive's zero-based/one-based runtime
+and future transport convention remains unresolved; any adapter offset belongs only in a
+future transport layer after verification.
+
+## Evidence and verification states
+
+- `MANUAL_CONFIRMED`: supplied-manual evidence, not physical-drive confirmation.
+- `LEGACY_CODE_ONLY`: recorded only in immutable legacy evidence.
+- `MANUAL_AND_LEGACY_AGREE`: both documentary sources agree.
+- `AMBIGUOUS`: documentary sources conflict or are incomplete.
+- `HARDWARE_VERIFICATION_REQUIRED`: metadata requires exact-drive confirmation.
+
+Current catalog entries use `HARDWARE_VERIFICATION_REQUIRED`, principally because numeric
+runtime addressing and 32-bit layout have not been verified. `U40.01` is explicitly
+ambiguous: the manual table identifies I16 while nearby prose calls it a 32-bit integer.
+
+Exact scale metadata uses rational values: temperatures and bus voltage use `1/10`,
+torque uses `1/10` percent rated torque, and application units use `1`. Raw decoding is
+separate from physical scaling. Application units are never joint degrees, and historical
+electronic gearing 9/16384 is not a joint calibration.
+
+## Catalog policy
+
+Catalog inclusion is not access authorization. `REGISTER_CATALOG` is immutable and offers
+only symbolic lookup/listing. There is no arbitrary read/write interface. Electronic
+gearing, position-reference selection, planning configuration, displacements, DI/DO
+assignment, and homing configuration are machine-defining or safety-relevant and require
+a future disabled-by-default engineering workflow. This milestone implements no such
+workflow and no register write.
 
 | Symbol | Address | Type | Scale/access | Meaning |
 |---|---:|---|---|---|
@@ -43,7 +93,7 @@ target drive and firmware. No persistent register is written at startup or recon
 | GROUP_2_ACCEL_TIME | 0x1114 | U32 | ms | C11.14 |
 | GROUP_2_DECEL_TIME | 0x1116 | U32 | ms | C11.16 |
 | GROUP_2_WAIT_TIME | 0x1118 | U32 | ms | C11.18 |
-| SPEED_FEEDBACK | 0x4001 | verify | rpm, RO | U40.01; manual width needs device verification |
+| SPEED_FEEDBACK | 0x4001 | I16, ambiguous | rpm, RO | U40.01; table says I16; prose says 32-bit |
 | TORQUE_FEEDBACK | 0x4003 | I16 | 0.1%, RO | U40.03 |
 | BUS_VOLTAGE | 0x4006 | U16 | 0.1 V, RO | U40.06 |
 | POSITION_DEVIATION | 0x4010 | I32 | encoder pulses, RO | U40.10 |
@@ -56,7 +106,8 @@ target drive and firmware. No persistent register is written at startup or recon
 Groups 3 and 4 used by the legacy Jog code follow C11.20 and C11.30. Add them only
 after verifying the intended Jog behavior and correcting the legacy forward-function typo.
 
-Homing registers are intentionally absent until the exact model/firmware manual, selected
-homing mode, HSW/PL/NL wiring, data types, units, and write conditions have been verified.
+Homing registers remain absent from the executable catalog until the exact model/firmware
+manual, selected homing mode, HSW/PL/NL wiring, data types, units, and write conditions
+have been verified.
 Engineering parameter writes require Servo Off, explicit authorization, a logged reason,
 backup, and read-back verification.

@@ -1,4 +1,4 @@
-"""Transport-free servo interface; no serial implementation exists in Milestone 1."""
+"""Transport-free servo interface; no serial implementation exists through Milestone 3."""
 
 from __future__ import annotations
 

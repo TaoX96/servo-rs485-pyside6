@@ -1,6 +1,6 @@
 # Proposed motion API
 
-This document designs a future REST/JSON API rooted at `/v1`. Milestone 2 uses the same
+This document designs a future REST/JSON API rooted at `/v1`. Milestone 3 uses the same
 framework-free command, state, telemetry, alarm, result, and error models through an
 in-process simulation client. It does not implement or expose a network client or service.
 
@@ -124,5 +124,5 @@ Electronic gearing, DI assignments, homing configuration, calibration acceptance
 other persistent or machine-defining changes are engineering-only. They are disabled by
 default, isolated from normal operation, require Servo Off, a logged reason, explicit
 authorization, configuration backup, and read-back verification. No engineering endpoint
-is implemented through Milestone 2, and future engineering design must still not expose an
+is implemented through Milestone 3, and future engineering design must still not expose an
 arbitrary register read/write API.

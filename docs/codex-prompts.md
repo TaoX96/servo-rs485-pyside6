@@ -1,7 +1,7 @@
 # Suggested prompts for future milestones
 
-Give Codex one explicitly approved milestone at a time. Milestone 2 now provides the
-in-process simulation GUI; it does not authorize Milestone 3 or hardware access.
+Give Codex one explicitly approved milestone at a time. Milestone 3 now provides a pure
+register codec and documentary catalog; it does not authorize transport or hardware access.
 
 ## Completed Milestone 1 - contracts and simulation
 
@@ -17,20 +17,17 @@ The minimal PySide6 shell communicates only through `MotionClient` and
 inputs and events, lease behavior, and simulation-only faults without networking,
 monitoring, serial transport, or hardware access.
 
-## Milestone 3 - register codec and read-only Pi transport
+## Completed Milestone 3 - transport-free register codec
 
-> After model/firmware and protocol review, implement and test U16, I16, U32, and I32
-> codecs with explicit configurable 32-bit order. Put a MinimalModbus transport only in
-> the Pi motion-driver boundary and expose read-only status/telemetry initially. Add a
-> hardware-marked diagnostic under tests/hardware, but do not run it without explicit
-> authorization. Do not implement writes, Servo On, homing, or motion.
+Implemented components are pure U16, I16, U32, and I32 codecs, explicit byte and word
+order, immutable register specifications, and a conservative read-only catalog. No
+transport, hardware diagnostic, register I/O, or hardware operation was added.
 
-## Milestone 4 - isolated monitoring
+## Milestone 4 - transport design and offline adapter tests
 
-> Implement the Pi monitoring service and Windows monitoring client with fake camera,
-> temperature, and media backends. Verify that crashes, timeouts, storage errors, and
-> cancellation cannot import, call, restart, or alter the motion service. Do not access
-> real Pi hardware unless separately authorized.
+> Design the Pi-owned read-only transport boundary and test it only against a fake backend
+> and recorded word fixtures. Keep 32-bit layout unverified, add no hardware test, perform
+> no device discovery, and expose no writes, Servo On, homing, or motion.
 
 ## Later commissioning milestones
 

@@ -47,12 +47,29 @@ Only the in-process adapter knows the coordinator and fake servo. Main-window lo
 the high-level client contract so a later network implementation need not change operator
 presentation or weaken command-side authorization.
 
+### Transport-free register boundary
+
+Milestone 3 adds only a pure future-driver sublayer:
+
+```text
+Future Pi Modbus transport (not implemented)
+    -> explicit register codec and immutable catalog
+    -> typed raw values
+```
+
+The codec accepts and returns ordinary Python integers. It does not know about Modbus
+functions, device offsets, serial ports, MinimalModbus, pyserial, the Pi, networking, or
+Qt. Catalog membership is documentary evidence, not permission to read or write a drive.
+Any future transport remains exclusively inside the Pi motion service and must supply an
+explicit, hardware-verified 32-bit byte/word layout.
+
 ### Raspberry Pi motion service
 
 The motion service is the only process allowed to own the USB-to-RS485 device. It validates
 commands, authorizes state transitions, maintains command idempotency and the control
 lease, drives the allowlisted A6-RS workflow, and publishes motion state and telemetry.
-Milestone 2 adds only an in-process GUI adapter around the synchronous simulation core.
+Milestone 3 adds only a transport-free register codec and catalog alongside the
+in-process GUI adapter around the synchronous simulation core.
 It contains no network server, network client, or real drive transport.
 
 ### Raspberry Pi monitoring service

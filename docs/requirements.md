@@ -1,6 +1,6 @@
 # Requirements
 
-## Milestone 2 scope
+## Milestone 3 scope
 
 Milestone 2 retains the Milestone 1 typed configuration, shared models, centralized state
 authorization, deterministic `FakeServo`, and idempotent in-process coordinator. It adds a
@@ -12,7 +12,9 @@ The GUI displays orthogonal state, telemetry validity and explicit units, lease 
 central authorization outcomes, bounded event history, finite-cycle progress, and
 simulation-only fault injection. It contains no HTTP/WebSocket transport, monitoring
 implementation, real servo driver, Modbus communication, real Servo On, real homing or
-motion, or systemd deployment.
+motion, or systemd deployment. Milestone 3 additionally provides only pure register-word
+encoding/decoding and immutable documentary register metadata. It adds no transport or
+register access, and all runtime addressing and 32-bit hardware layout remain unverified.
 
 ## System responsibilities
 

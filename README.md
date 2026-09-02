@@ -3,16 +3,21 @@
 This repository defines a distributed control and monitoring system for a knee-test rig.
 The intended operator interface is a PySide6 application on Windows, while a Raspberry Pi
 will own motion communication and monitoring services. The project is currently at
-**Milestone 2: in-process simulation GUI**.
+**Milestone 3: transport-free register codec**.
 
 Milestone 2 adds a minimal PySide6 operator shell and a high-level motion-client boundary
 over the Milestone 1 deterministic simulation. It exercises state presentation, command
 authorization, leases, simulated enable and homing, bounded application-unit motion,
 finite cycles, pause/resume, controlled stop, and explicit simulated fault recovery.
 
+Milestone 3 adds pure U16, I16, U32, and I32 register-word codecs with explicit byte and
+word order, immutable documentary register metadata, and a conservative read-only
+catalog. It performs no register or device I/O. The target drive's 32-bit layout and
+runtime address convention remain explicitly unverified.
+
 There is still no network client or server, Raspberry Pi service, monitoring service,
 Modbus driver, camera or temperature implementation, deployment unit, or executable real
-hardware-control path.
+hardware-control path. The GUI remains simulation-only.
 
 ## Responsibilities
 
@@ -74,6 +79,13 @@ tests without explicit authorization. Until safety hardware, model/firmware, reg
 encoding, direction, limits, and calibration are verified, real Servo On, homing,
 automatic cycling, absolute-position motion, and persistent parameter writes are
 prohibited.
+
+The pure codec and catalog tests can be run independently:
+
+```powershell
+.\.venv\Scripts\python -m pytest -q tests/unit/test_register_codec.py `
+  tests/unit/test_register_spec.py tests/unit/test_register_catalog.py
+```
 
 ## Repository layout
 
