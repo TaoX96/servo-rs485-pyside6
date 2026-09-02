@@ -1,2 +1,6 @@
-"""Future A6-RS transport boundary, exclusively owned by the motion service."""
+"""Hardware-independent driver contract owned only by the future Pi motion service."""
+
+from knee_rig.motion.driver.interface import OperationReceipt, ServoInterface
+
+__all__ = ["OperationReceipt", "ServoInterface"]
 

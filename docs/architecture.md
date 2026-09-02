@@ -40,7 +40,8 @@ opens serial, or exposes register addresses.
 The motion service is the only process allowed to own the USB-to-RS485 device. It validates
 commands, authorizes state transitions, maintains command idempotency and the control
 lease, drives the allowlisted A6-RS workflow, and publishes motion state and telemetry.
-No motion-service operation is implemented in Milestone 0.
+Milestone 1 implements only a synchronous simulation core, deterministic fake servo, and
+framework-free contracts. It contains no network server or real drive transport.
 
 ### Raspberry Pi monitoring service
 
@@ -64,17 +65,20 @@ commands are supplementary and not safety-rated.
 
 ## State ownership
 
-The motion service is authoritative for four explicit dimensions:
+The motion service is authoritative for five explicit dimensions:
 
 | Dimension | States |
 |---|---|
-| Service | `DISCONNECTED`, `CONNECTING`, `AVAILABLE`, `FAULT` |
-| Servo | `SERVO_DISABLED`, `SERVO_ENABLED` |
-| Homing | `UNHOMED`, `HOMING`, `HOMED` |
-| Motion | `IDLE`, `RUNNING`, `PAUSED`, `STOPPING` |
+| Service | `STARTING`, `READY`, `DEGRADED`, `FAULT`, `STOPPING`, `STOPPED` |
+| Connection | `DISCONNECTED`, `CONNECTING`, `CONNECTED`, `COMMUNICATION_FAULT` |
+| Servo | `SERVO_DISABLED`, `SERVO_ENABLING`, `SERVO_ENABLED`, `SERVO_DISABLING`, `SERVO_FAULT` |
+| Homing | `UNHOMED`, `HOMING`, `HOMED`, `HOMING_FAULT` |
+| Motion | `IDLE`, `STARTING`, `MOVING`, `PAUSED`, `STOPPING`, `MOTION_FAULT` |
 
-Pi startup begins `SERVO_DISABLED`, `UNHOMED`, and `IDLE`. State transitions depend
-on confirmed feedback, not request acceptance or fixed sleeps.
+Pi startup begins disconnected, `SERVO_DISABLED`, `UNHOMED`, and `IDLE`. The
+simulation preserves the same safe startup and advances only by explicit ticks. Future
+real transitions must depend on confirmed feedback, not request acceptance or fixed
+sleeps.
 
 ## Failure isolation and required behavior
 
@@ -85,9 +89,8 @@ on confirmed feedback, not request acceptance or fixed sleeps.
 | Motion service fails | No other process takes RS485 ownership. Any restart begins disabled, unhomed, idle, and without restoring a task. Hardware safety remains independent. |
 | Monitoring service fails | Motion service remains isolated and running; failure cannot issue a motion command or trigger recovery. |
 | Raspberry Pi restarts | Do not restore leases or tasks. Start `SERVO_DISABLED`, `UNHOMED`, and nonmoving. |
-| RS485 disconnects | Stop issuing commands, enter `DISCONNECTED`, invalidate interrupted work, and require deliberate recovery after communication returns. |
+| RS485 disconnects | Stop issuing commands, enter connection `COMMUNICATION_FAULT` and service `FAULT`, invalidate interrupted work, and require deliberate recovery after communication returns. |
 | Servo alarm occurs | Enter `FAULT`, block motion, retain alarm evidence, and require explicit reset and state reauthorization. |
 
 No watchdog may restart or resume a previous motion task. A network heartbeat is a service
 health mechanism only and is never a hardware E-stop.
-

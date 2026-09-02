@@ -2,7 +2,8 @@
 
 This document records preliminary design conclusions. It does not confirm the installed
 drive model, firmware, wiring, direction, register encoding, or safe commissioning state,
-and it does not implement executable homing.
+and it does not implement executable real homing. Milestone 1 includes only deterministic
+fake homing scenarios for success, timeout, and missing-HSW tests.
 
 ## Drive responsibility
 
@@ -53,7 +54,6 @@ Homing succeeds only when all required evidence agrees:
 
 A bounded timeout is required but is not a substitute for PL/NL protection. Timeout,
 contradictory feedback, unexpected switch state, alarm, lost communication, or an
-out-of-tolerance result enters `FAULT` or `DISCONNECTED`, leaves homing unconfirmed,
-blocks motion, and requires explicit recovery. No interrupted homing operation is resumed
-automatically.
-
+out-of-tolerance result enters service `FAULT` or connection
+`COMMUNICATION_FAULT`/`DISCONNECTED`, leaves homing unconfirmed, blocks motion, and
+requires explicit recovery. No interrupted homing operation is resumed automatically.

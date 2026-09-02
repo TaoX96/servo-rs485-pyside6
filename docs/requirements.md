@@ -1,10 +1,14 @@
 # Requirements
 
-## Milestone 0 scope
+## Milestone 1 scope
 
-Milestone 0 defines architecture, safety policy, configuration examples, package
-boundaries, and future interfaces. It contains no executable hardware-control service,
-real homing, Servo On, motion path, or systemd deployment.
+Milestone 1 provides typed layered configuration, serializable shared models, centralized
+state authorization, a hardware-independent servo protocol, deterministic `FakeServo`,
+and an in-process motion coordinator with command idempotency. Simulation operations use
+explicit ticks and never sleep or access hardware or networking.
+
+It contains no HTTP server, GUI, monitoring implementation, real servo driver, Modbus
+communication, real Servo On, real homing or motion, or systemd deployment.
 
 ## System responsibilities
 
@@ -40,8 +44,9 @@ Automatic cycling and absolute-position motion require confirmed `HOMED` state.
 
 Startup, GUI connection, Pi restart, RS485 reconnection, fault reset, and service restart
 must never automatically enable, home, start, or resume motion. A timeout, invalid state,
-inconsistent feedback, servo alarm, or unexpected condition enters `FAULT` or
-`DISCONNECTED` and requires deliberate operator recovery.
+inconsistent feedback, servo alarm, or unexpected condition enters service `FAULT` or
+connection `COMMUNICATION_FAULT`/`DISCONNECTED` and requires deliberate operator
+recovery.
 
 If the active GUI control lease expires during motion, the motion service requests a
 controlled stop when communication permits, rejects further motion, enters `FAULT`, and
@@ -66,4 +71,3 @@ requires explicit recovery. It does not automatically issue Servo Off.
 - Safe controlled-stop behavior and whether Servo Off can release the mechanism.
 - Approved angle, speed, acceleration, deceleration, torque, temperature, and cycle limits.
 - Authentication, transport security, network topology, and deployment addresses.
-

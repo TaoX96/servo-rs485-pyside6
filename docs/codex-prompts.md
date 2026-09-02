@@ -1,22 +1,22 @@
 # Suggested prompts for future milestones
 
-Give Codex one explicitly approved milestone at a time. Milestone 0 defines architecture
-and documentation only; it does not authorize Milestone 1 or hardware access.
+Give Codex one explicitly approved milestone at a time. Milestone 1 now provides the
+simulation-only foundation; it does not authorize Milestone 2 or hardware access.
 
-## Milestone 1 - contracts and simulation
+## Completed Milestone 1 - contracts and simulation
 
-> Read the root AGENTS.md and all project documents. Implement hardware-independent typed
-> configuration loading, shared API/state models, motion-state authorization, a simulated
-> motion service, and tests. Keep every hardware gate disabled. Do not import or implement
-> MinimalModbus/pyserial transport, open ports, access the Pi, enable, home, or move. Run
-> applicable Ruff, mypy, and pytest checks and report exact results.
+Implemented components are strict typed configuration, shared API/state models, centralized
+authorization, `ServoInterface`, deterministic `FakeServo`, an in-process coordinator,
+and hardware-independent unit tests. There is still no network, GUI, monitoring, or real
+driver implementation.
 
 ## Milestone 2 - local service and GUI simulation
 
-> Implement the local simulated `/v1` API contract, command idempotency, controller lease,
-> and a PySide6 shell that communicates only with that API. Test lease expiry, controlled
-> stop to FAULT, restart-safe state, and monitoring isolation with fakes. Do not add a real
-> serial transport or execute hardware actions.
+> Build a local in-process application/service composition around the existing simulation
+> core and add a minimal PySide6 status shell that communicates only through a client
+> abstraction. Keep networking fake or in-process; do not start HTTP/WebSocket, import a
+> real serial transport, access hardware, or add monitoring implementation. Preserve all
+> existing authorization, idempotency, restart, and lease-expiry tests.
 
 ## Milestone 3 - register codec and read-only Pi transport
 
@@ -52,4 +52,3 @@ combine approval to design a workflow with approval to execute it.
 
 Avoid broad requests such as “finish the application” or “make the servo run.” Never infer
 hardware authorization from a software implementation request.
-

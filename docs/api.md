@@ -1,7 +1,8 @@
 # Proposed motion API
 
-This document designs a future REST/JSON API rooted at `/v1`. Milestone 0 does not
-implement or expose a network service.
+This document designs a future REST/JSON API rooted at `/v1`. Milestone 1 implements
+framework-free command, state, telemetry, alarm, result, and error models plus an
+in-process simulation coordinator. It does not implement or expose a network service.
 
 ## General rules
 
@@ -55,7 +56,7 @@ executing it again. Reuse with a different operation or payload returns HTTP `40
 `COMMAND_ID_CONFLICT`.
 
 An accepted response contains the command ID, operation, acceptance time, current state,
-and `PENDING`, `RUNNING`, `SUCCEEDED`, `REJECTED`, `CANCELLED`, or `FAILED`
+and `ACCEPTED`, `RUNNING`, `SUCCEEDED`, `REJECTED`, `CANCELLED`, or `FAILED`
 status. Long-running command status is available at
 `GET /v1/commands/{command_id}`.
 
@@ -100,7 +101,8 @@ recovery.
     "message": "Homing is required before absolute motion.",
     "command_id": "550e8400-e29b-41d4-a716-446655440000",
     "state": {
-      "service": "AVAILABLE",
+      "service": "READY",
+      "connection": "CONNECTED",
       "servo": "SERVO_ENABLED",
       "homing": "UNHOMED",
       "motion": "IDLE"
@@ -122,6 +124,5 @@ Electronic gearing, DI assignments, homing configuration, calibration acceptance
 other persistent or machine-defining changes are engineering-only. They are disabled by
 default, isolated from normal operation, require Servo Off, a logged reason, explicit
 authorization, configuration backup, and read-back verification. No engineering endpoint
-is implemented in Milestone 0, and future engineering design must still not expose an
+is implemented in Milestone 1, and future engineering design must still not expose an
 arbitrary register read/write API.
-

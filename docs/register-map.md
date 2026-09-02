@@ -1,9 +1,9 @@
 # A6-RS register map used by this project
 
 This is design evidence for the future Raspberry Pi motion service. The Windows GUI must
-never use this map, open RS485, or read or write these registers. Milestone 0 implements
-no register access. Future operator API operations remain high-level and allowlisted; this
-table must not be exposed as a general-purpose register interface.
+never use this map, open RS485, or read or write these registers. No register access exists
+through Milestone 1. Future operator API operations remain high-level and allowlisted;
+this table must not be exposed as a general-purpose register interface.
 
 All entries must be verified against the supplied A6-RS parameter-list PDF and the exact
 installed firmware. Address notation follows the historical Python test code.

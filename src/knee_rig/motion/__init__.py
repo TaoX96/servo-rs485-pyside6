@@ -1,2 +1,1 @@
-"""Raspberry Pi motion-control boundary; no real hardware path exists in Milestone 0."""
-
+"""Raspberry Pi motion boundary; Milestone 1 contains simulation only."""

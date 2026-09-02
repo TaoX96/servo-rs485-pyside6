@@ -72,7 +72,8 @@ Real motion remains prohibited until all applicable items are recorded and appro
 ## Fault and reconnection behavior
 
 A timeout, malformed response, inconsistent feedback, invalid state, servo alarm, or other
-unexpected condition transitions the motion service to `FAULT` or `DISCONNECTED`.
+unexpected condition transitions the service to `FAULT` or the connection to
+`COMMUNICATION_FAULT`/`DISCONNECTED`.
 Recovery requires explicit operator confirmation. Fault reset, Pi restart, GUI reconnect,
 RS485 reconnect, and lease reacquisition must never automatically enable, home, resume, or
 move.
@@ -84,4 +85,3 @@ is not an emergency stop and does not replace the independent hardware safety sy
 No real hardware test may be unattended or run without explicit authorization for that
 test. Commissioning must proceed through separately reviewed, bounded, low-energy stages;
 this document does not authorize any such stage.
-

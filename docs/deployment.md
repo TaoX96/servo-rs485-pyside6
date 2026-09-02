@@ -1,7 +1,7 @@
 # Raspberry Pi deployment design
 
-Milestone 0 documents future deployment only. It does not provide, install, enable, or
-start any systemd unit.
+Deployment remains design-only through Milestone 1. The repository does not provide,
+install, enable, or start any systemd unit.
 
 ## Planned services
 
@@ -76,4 +76,3 @@ Before creating units, define the dedicated users/groups, udev permissions for t
 adapter, configuration paths, API authentication and TLS/network policy, log retention,
 shutdown semantics, health checks, and service hardening. Unit installation and startup
 require a later explicitly approved milestone.
-

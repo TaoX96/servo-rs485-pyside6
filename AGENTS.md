@@ -40,8 +40,9 @@ not be introduced as dependencies unless the user explicitly changes the archite
 - A newly connected or reconnected GUI may initially read status only.
 - RS485 reconnection must not enable the servo, home, resume, or recover motion.
 - A timeout, malformed response, inconsistent feedback, invalid state, servo alarm, or
-  unexpected condition transitions the system to `FAULT` or `DISCONNECTED`, stops new
-  motion commands, and requires explicit operator recovery.
+  unexpected condition transitions the service to `FAULT` or the connection to
+  `COMMUNICATION_FAULT`/`DISCONNECTED`, stops new motion commands, and requires
+  explicit operator recovery.
 - Fault reset must not automatically enable the servo, home, or move.
 - Automatic cycles and absolute-position moves are prohibited until homing succeeds.
 - A controlled-stop command is not and must never be labelled as an emergency stop.
@@ -74,13 +75,15 @@ have bounded timeouts, cancellation behavior, and diagnostic context.
 
 ## Motion state requirements
 
-Model service connectivity, servo enablement, homing, and motion as explicit state
-dimensions rather than inferring them from UI state or elapsed sleeps:
+Model service lifecycle, drive connection, servo enablement, homing, and motion as
+orthogonal state dimensions rather than inferring them from UI state or elapsed sleeps:
 
-- Service: `DISCONNECTED`, `CONNECTING`, `AVAILABLE`, `FAULT`
-- Servo: `SERVO_DISABLED`, `SERVO_ENABLED`
-- Homing: `UNHOMED`, `HOMING`, `HOMED`
-- Motion: `IDLE`, `RUNNING`, `PAUSED`, `STOPPING`
+- Service: `STARTING`, `READY`, `DEGRADED`, `FAULT`, `STOPPING`, `STOPPED`
+- Connection: `DISCONNECTED`, `CONNECTING`, `CONNECTED`, `COMMUNICATION_FAULT`
+- Servo: `SERVO_DISABLED`, `SERVO_ENABLING`, `SERVO_ENABLED`,
+  `SERVO_DISABLING`, `SERVO_FAULT`
+- Homing: `UNHOMED`, `HOMING`, `HOMED`, `HOMING_FAULT`
+- Motion: `IDLE`, `STARTING`, `MOVING`, `PAUSED`, `STOPPING`, `MOTION_FAULT`
 
 Transitions must depend on confirmed drive feedback. Keep pause, resume, controlled stop,
 Servo Off, fault reset, and hardware E-stop indication distinct. Interrupted commands are
@@ -166,10 +169,13 @@ authorization plus an approved hardware checklist.
 7. Report every changed or moved file, verification results, unresolved assumptions,
    reference-file preservation, and whether any hardware interface was accessed.
 
-## Milestone 0 boundary
+## Milestone 1 boundary
 
-Milestone 0 is documentation/design only. Do not implement a real servo driver, Modbus
-write path, executable Servo On, real motion, executable homing, systemd unit, or service
-startup script. Do not open a COM port or `/dev/tty*`, access a Raspberry Pi, run legacy
-control code, install or start a service, write a drive parameter, commit, or push.
+Milestone 1 implements only typed configuration and domain models, centralized command
+authorization, a transport-free servo protocol, deterministic simulation, an in-process
+coordinator, and hardware-independent unit tests. It does not implement a network server,
+GUI, monitoring service, real servo driver, Modbus path, executable hardware Servo On,
+real motion, real homing, systemd unit, or deployment script.
 
+Do not open a COM port or `/dev/tty*`, access a Raspberry Pi or network service, import
+legacy control code, install or start a service, write a drive parameter, commit, or push.
