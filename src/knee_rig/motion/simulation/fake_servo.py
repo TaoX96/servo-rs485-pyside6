@@ -392,9 +392,7 @@ class FakeServo:
             self._complete_leg(operation)
             return
         direction = 1.0 if delta > 0 else -1.0
-        if (direction > 0 and self._limits.pl_active) or (
-            direction < 0 and self._limits.nl_active
-        ):
+        if (direction > 0 and self._limits.pl_active) or (direction < 0 and self._limits.nl_active):
             self._enter_fault(
                 "LIMIT_ACTIVATED_DURING_MOTION",
                 "Motion attempted farther into an active limit.",

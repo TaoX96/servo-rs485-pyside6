@@ -52,4 +52,3 @@ def connected_enabled_homed_servo() -> FakeServo:
     assert servo.request_homing(timeout_ticks=5).accepted
     servo.advance(3)
     return servo
-

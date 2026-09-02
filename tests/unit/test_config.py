@@ -33,12 +33,12 @@ class ConfigTests(unittest.TestCase):
             shared = self._write(
                 directory,
                 "common.toml",
-                "[logging]\nlevel = \"WARNING\"\n",
+                '[logging]\nlevel = "WARNING"\n',
             )
             local = self._write(
                 directory,
                 "common.local.toml",
-                "[logging]\nlevel = \"DEBUG\"\ndirectory = \"logs\"\n",
+                '[logging]\nlevel = "DEBUG"\ndirectory = "logs"\n',
             )
             config = load_config(shared_paths=[shared], local_paths=[local])
         self.assertEqual(config.logging.level, "DEBUG")
@@ -76,7 +76,7 @@ class ConfigTests(unittest.TestCase):
             path = self._write(
                 Path(raw_directory),
                 "bad.toml",
-                "[features]\nsimulation = \"true\"\n",
+                '[features]\nsimulation = "true"\n',
             )
             with self.assertRaises(ConfigValidationError) as caught:
                 load_config(shared_paths=[path])

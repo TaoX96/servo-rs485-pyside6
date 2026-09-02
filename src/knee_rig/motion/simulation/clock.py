@@ -16,4 +16,3 @@ class ManualClock:
             raise ValueError("seconds must be greater than zero")
         self.monotonic_s += seconds
         self.wall_time += timedelta(seconds=seconds)
-

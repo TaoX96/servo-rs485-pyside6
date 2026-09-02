@@ -3,4 +3,3 @@
 from knee_rig.motion.driver.interface import OperationReceipt, ServoInterface
 
 __all__ = ["OperationReceipt", "ServoInterface"]
-

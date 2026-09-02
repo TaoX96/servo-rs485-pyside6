@@ -20,4 +20,3 @@ __all__ = [
     "default_config",
     "load_config",
 ]
-

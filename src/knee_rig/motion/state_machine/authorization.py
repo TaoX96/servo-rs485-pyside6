@@ -201,9 +201,7 @@ class StateAuthorizer:
                     "Joint-angle limits are not configured.",
                 )
             if not (
-                limits.min_joint_angle_deg
-                <= payload.joint_angle_deg
-                <= limits.max_joint_angle_deg
+                limits.min_joint_angle_deg <= payload.joint_angle_deg <= limits.max_joint_angle_deg
             ):
                 return self._reject(
                     ErrorCode.OUT_OF_RANGE,
@@ -390,7 +388,7 @@ class StateAuthorizer:
         message: str,
         *,
         retryable: bool = False,
-        **details: str | int | float | bool | None,
+        **details: str | float | bool | None,
     ) -> AuthorizationDecision:
         return AuthorizationDecision(
             False,

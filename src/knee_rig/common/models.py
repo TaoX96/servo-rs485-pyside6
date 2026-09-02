@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
-from typing import TypeAlias
 from uuid import UUID
 
 
@@ -259,7 +258,7 @@ class ResetFaultPayload:
         return {"operator_confirmation": self.operator_confirmation}
 
 
-CommandPayload: TypeAlias = (
+type CommandPayload = (
     EnableServoPayload
     | DisableServoPayload
     | HomePayload
@@ -293,7 +292,7 @@ class CommandEnvelope:
     def __post_init__(self) -> None:
         expected = _PAYLOAD_TYPES[self.name]
         if not isinstance(self.payload, expected):
-            raise ValueError(f"{self.name.value} requires {expected.__name__}")
+            raise TypeError(f"{self.name.value} requires {expected.__name__}")
 
     @classmethod
     def from_values(
@@ -341,7 +340,7 @@ class ErrorCode(StrEnum):
     INTERNAL_ERROR = "INTERNAL_ERROR"
 
 
-DiagnosticValue: TypeAlias = str | int | float | bool | None
+type DiagnosticValue = str | int | float | bool | None
 
 
 @dataclass(frozen=True, slots=True)

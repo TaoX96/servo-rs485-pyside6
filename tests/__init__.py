@@ -1,2 +1,1 @@
 """Hardware-independent test suite."""
-

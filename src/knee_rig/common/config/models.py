@@ -124,4 +124,3 @@ class AppConfig:
 def default_config() -> AppConfig:
     """Return a new immutable configuration with simulation-only safe defaults."""
     return AppConfig()
-

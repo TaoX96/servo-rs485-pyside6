@@ -6,4 +6,3 @@ from knee_rig.motion.state_machine.authorization import (
 )
 
 __all__ = ["AuthorizationContext", "StateAuthorizer"]
-

@@ -130,9 +130,7 @@ def _section(data: Mapping[str, object], name: str) -> Mapping[str, object]:
 def _bool(data: Mapping[str, object], key: str, path: str) -> bool:
     value = data[key]
     if type(value) is not bool:
-        raise ConfigValidationError(
-            [ValidationIssue("INVALID_TYPE", path, "expected a boolean")]
-        )
+        raise ConfigValidationError([ValidationIssue("INVALID_TYPE", path, "expected a boolean")])
     return value
 
 
@@ -172,9 +170,7 @@ def _build_config(data: Mapping[str, object]) -> AppConfig:
     return AppConfig(
         features=FeatureConfig(
             simulation=_bool(features, "simulation", "features.simulation"),
-            allow_servo_enable=_bool(
-                features, "allow_servo_enable", "features.allow_servo_enable"
-            ),
+            allow_servo_enable=_bool(features, "allow_servo_enable", "features.allow_servo_enable"),
             allow_motion=_bool(features, "allow_motion", "features.allow_motion"),
             allow_homing=_bool(features, "allow_homing", "features.allow_homing"),
             allow_persistent_parameter_write=_bool(
@@ -198,15 +194,9 @@ def _build_config(data: Mapping[str, object]) -> AppConfig:
             direction_sign=_int(calibration, "direction_sign", "calibration.direction_sign"),
         ),
         limits=LimitsConfig(
-            min_joint_angle_deg=_float(
-                limits, "min_joint_angle_deg", "limits.min_joint_angle_deg"
-            ),
-            max_joint_angle_deg=_float(
-                limits, "max_joint_angle_deg", "limits.max_joint_angle_deg"
-            ),
-            max_motor_speed_rpm=_int(
-                limits, "max_motor_speed_rpm", "limits.max_motor_speed_rpm"
-            ),
+            min_joint_angle_deg=_float(limits, "min_joint_angle_deg", "limits.min_joint_angle_deg"),
+            max_joint_angle_deg=_float(limits, "max_joint_angle_deg", "limits.max_joint_angle_deg"),
+            max_motor_speed_rpm=_int(limits, "max_motor_speed_rpm", "limits.max_motor_speed_rpm"),
             min_acceleration_time_ms=_int(
                 limits, "min_acceleration_time_ms", "limits.min_acceleration_time_ms"
             ),
@@ -221,9 +211,7 @@ def _build_config(data: Mapping[str, object]) -> AppConfig:
             max_encoder_temperature_c=_float(
                 limits, "max_encoder_temperature_c", "limits.max_encoder_temperature_c"
             ),
-            max_torque_percent=_float(
-                limits, "max_torque_percent", "limits.max_torque_percent"
-            ),
+            max_torque_percent=_float(limits, "max_torque_percent", "limits.max_torque_percent"),
         ),
         logging=LoggingConfig(
             level=_str(logging, "level", "logging.level"),
@@ -253,9 +241,7 @@ def _build_config(data: Mapping[str, object]) -> AppConfig:
             ),
         ),
         monitoring_service=MonitoringServiceConfig(
-            bind_host=_str(
-                monitoring_service, "bind_host", "monitoring_service.bind_host"
-            ),
+            bind_host=_str(monitoring_service, "bind_host", "monitoring_service.bind_host"),
             port=_int(monitoring_service, "port", "monitoring_service.port"),
             allow_camera=_bool(
                 monitoring_service, "allow_camera", "monitoring_service.allow_camera"
@@ -373,8 +359,7 @@ def _validate_config(config: AppConfig) -> None:
             )
 
     if (
-        limits.min_joint_angle_deg != 0.0
-        or limits.max_joint_angle_deg != 0.0
+        limits.min_joint_angle_deg != 0.0 or limits.max_joint_angle_deg != 0.0
     ) and limits.min_joint_angle_deg >= limits.max_joint_angle_deg:
         issues.append(
             ValidationIssue(
@@ -429,9 +414,7 @@ def _validate_config(config: AppConfig) -> None:
         )
     if not 1 <= config.monitoring_service.port <= 65535:
         issues.append(
-            ValidationIssue(
-                "OUT_OF_RANGE", "monitoring_service.port", "must be 1 through 65535"
-            )
+            ValidationIssue("OUT_OF_RANGE", "monitoring_service.port", "must be 1 through 65535")
         )
     if config.motion_service.control_lease_ttl_s <= 0:
         issues.append(

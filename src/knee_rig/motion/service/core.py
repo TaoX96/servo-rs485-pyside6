@@ -144,16 +144,13 @@ class MotionCoordinator:
     def state(self) -> StateSnapshot:
         servo_status = self._servo.read_status()
         service = self._service_state
-        if (
-            service not in {ServiceState.STARTING, ServiceState.STOPPING, ServiceState.STOPPED}
-            and (
-                self._service_fault_code is not None
-                or servo_status.active_fault_code is not None
-                or servo_status.connection is ConnectionState.COMMUNICATION_FAULT
-                or servo_status.servo is ServoState.SERVO_FAULT
-                or servo_status.homing is HomingState.HOMING_FAULT
-                or servo_status.motion is MotionState.MOTION_FAULT
-            )
+        if service not in {ServiceState.STARTING, ServiceState.STOPPING, ServiceState.STOPPED} and (
+            self._service_fault_code is not None
+            or servo_status.active_fault_code is not None
+            or servo_status.connection is ConnectionState.COMMUNICATION_FAULT
+            or servo_status.servo is ServoState.SERVO_FAULT
+            or servo_status.homing is HomingState.HOMING_FAULT
+            or servo_status.motion is MotionState.MOTION_FAULT
         ):
             service = ServiceState.FAULT
         return StateSnapshot(
