@@ -1,0 +1,47 @@
+# Deprecated compatibility example.
+# New installations should use common.example.toml, pi.example.toml, and
+# windows.example.toml with matching untracked *.local.toml overrides.
+
+[connection]
+# Intentionally unconfigured. A Pi local override must use /dev/serial/by-id/...
+# after the exact adapter has been recorded.
+device = ""
+slave_address = 1
+baudrate = 9600
+data_bits = 8
+parity = "none"
+stop_bits = 1
+timeout_s = 1.0
+byteorder_32 = "unverified"
+legacy_byteorder_hypothesis = "little"
+
+[raspberry_pi]
+# Intentionally blank; do not commit a machine-specific address or credentials.
+motion_api_base_url = ""
+monitoring_api_base_url = ""
+
+[calibration]
+position_units_per_joint_degree = 0.0
+joint_zero_offset_deg = 0.0
+direction_sign = 0
+calibration_verified = false
+
+[limits]
+# Zero means unconfigured and rejects the corresponding motion operation.
+min_joint_angle_deg = 0.0
+max_joint_angle_deg = 0.0
+max_motor_speed_rpm = 0
+min_acceleration_time_ms = 0
+min_deceleration_time_ms = 0
+max_wait_time_ms = 0
+max_cycle_count = 0
+max_motor_temperature_c = 0.0
+
+[features]
+simulation = true
+allow_servo_enable = false
+allow_motion = false
+allow_homing = false
+allow_persistent_parameter_write = false
+calibration_verified = false
+

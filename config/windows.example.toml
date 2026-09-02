@@ -1,0 +1,28 @@
+# Copy to windows.local.toml on the Windows GUI host.
+
+[features]
+simulation = true
+allow_servo_enable = false
+allow_motion = false
+allow_homing = false
+allow_persistent_parameter_write = false
+calibration_verified = false
+
+[motion_api]
+# Loopback is a safe placeholder, not the Raspberry Pi's real address.
+base_url = "http://127.0.0.1:8765"
+request_timeout_s = 3.0
+lease_renewal_interval_s = 1.0
+
+[monitoring_api]
+base_url = "http://127.0.0.1:8766"
+request_timeout_s = 3.0
+temperature_interval_s = 5.0
+
+[gui]
+start_maximized = false
+confirm_state_changing_commands = true
+
+[logging]
+directory = ""
+

@@ -1,0 +1,40 @@
+# Copy to pi.local.toml on the Raspberry Pi.
+
+[features]
+simulation = true
+allow_servo_enable = false
+allow_motion = false
+allow_homing = false
+allow_persistent_parameter_write = false
+calibration_verified = false
+
+[motion_service]
+bind_host = "127.0.0.1"
+port = 8765
+control_lease_ttl_s = 5.0
+
+[serial]
+# Intentionally unconfigured. Production must use a recorded /dev/serial/by-id/... path,
+# never /dev/ttyUSB0.
+device = ""
+protocol = "modbus_rtu"
+slave_address = 1
+baudrate = 9600
+data_bits = 8
+parity = "none"
+stop_bits = 1
+timeout_s = 1.0
+byteorder_32 = "unverified"
+legacy_byteorder_hypothesis = "little"
+
+[monitoring_service]
+bind_host = "127.0.0.1"
+port = 8766
+allow_camera = false
+allow_recording = false
+allow_temperature_sensor = false
+media_directory = ""
+
+[logging]
+directory = ""
+
