@@ -1,6 +1,6 @@
 # Requirements
 
-## Milestone 3 scope
+## Milestone 4 scope
 
 Milestone 2 retains the Milestone 1 typed configuration, shared models, centralized state
 authorization, deterministic `FakeServo`, and idempotent in-process coordinator. It adds a
@@ -15,6 +15,12 @@ implementation, real servo driver, Modbus communication, real Servo On, real hom
 motion, or systemd deployment. Milestone 3 additionally provides only pure register-word
 encoding/decoding and immutable documentary register metadata. It adds no transport or
 register access, and all runtime addressing and 32-bit hardware layout remain unverified.
+
+Milestone 4 adds a one-shot offline symbolic reader, explicit read allowlists, an in-memory
+synthetic-word transport, immutable typed results, and partial snapshots. No real transport,
+writes, retry/polling loop, or GUI integration is added. Engineering inspection is disabled
+by default. Catalog areas remain unresolved and synthetic fixture overrides cannot grant
+hardware verification. Failures and ambiguous fields cannot become valid zero readings.
 
 ## System responsibilities
 

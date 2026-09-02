@@ -1,9 +1,9 @@
 # A6-RS documentary register catalog and codec assumptions
 
-This is design evidence for the future Raspberry Pi motion service. Milestone 3 provides
-a pure codec and immutable catalog, not a transport. The Windows GUI must never use this
-map, open RS485, or read or write these registers. No register access exists through
-Milestone 3. Future operator API operations remain high-level and allowlisted;
+This is design evidence for the future Raspberry Pi motion service. Milestone 4 composes
+the pure codec/catalog with an offline fake transport and symbolic read-only reader. The
+Windows GUI must never use this map or access registers. No real register access exists
+through Milestone 4. Future operator API operations remain high-level and allowlisted;
 this table must not be exposed as a general-purpose register interface.
 
 All entries must be verified against the supplied A6-RS parameter-list PDF and the exact
@@ -55,6 +55,54 @@ separate from physical scaling. Application units are never joint degrees, and h
 electronic gearing 9/16384 is not a joint calibration.
 
 ## Catalog policy
+
+### Milestone 4 read policy
+
+The immutable operational read allowlist contains `SERVO_STATUS`, `POSITION_FEEDBACK`,
+`SPEED_FEEDBACK`, `TORQUE_FEEDBACK`, `BUS_VOLTAGE`, `POSITION_DEVIATION`,
+`MOTOR_TEMPERATURE`, `ENCODER_TEMPERATURE`, and `PLAN_OPERATION_GROUP`.
+
+The separate engineering inspection allowlist contains `POSITION_REFERENCE_SELECTION`,
+`GEAR_1_NUMERATOR`, `GEAR_1_DENOMINATOR`, and `PLAN_MODE`. Engineering permission is
+strictly boolean and disabled by default; granting it never enables writing. The catalog's
+`GROUP_1_DISPLACEMENT` belongs to neither read allowlist. Snapshot assembly is operational
+only, even when engineering inspection is enabled. Unknown symbols and unresolved
+addresses fail closed. Reader callers cannot supply addresses, offsets, or function codes.
+
+All catalog areas/function-code mappings remain `UNRESOLVED`. The only supported override
+is explicit `OfflineFixtureInterpretation` for the `synthetic-offline-fixture` source,
+using area `OFFLINE_FIXTURE`. This does not establish a real register area or addressing
+convention. No default hardware byte layout or address offset is inferred.
+
+Each decoded result retains immutable raw words, actual requested address/count, original
+catalog area, sequence, injected acquisition timestamps, exact scale metadata, source,
+documentary verification and `HARDWARE_UNVERIFIED` layout status. Missing explicit 32-bit
+fixture layouts raise `UnverifiedLayoutError`; successful fixture decoding is only
+`FIXTURE_VALID`, never hardware-verified. Scaling remains metadata-only (no scaled physical
+value or rounding), and application units never become joint degrees.
+
+Ambiguous speed feedback returns the synthetic one-word table-form record but no decoded
+scalar or selected layout. This does not resolve the conflicting 32-bit prose; its result
+is `AMBIGUOUS` and the snapshot is degraded. No genuine raw capture is supplied or claimed;
+test words are explicitly synthetic, including non-symmetric positive/negative patterns.
+
+Snapshots default to the nine operational symbols, in deterministic sorted order. They
+retain successful fields and explicit per-field error codes, marking overall validity
+`DEGRADED` for any failure or ambiguity. A smaller non-ambiguous successful selection is
+`FIXTURE_VALID`. Missing, stale or failed fields are never zero-filled or reused from a
+cache. Freshness means fresh at acquisition; consumers must use monotonic acquisition time
+to assess age later. Sequence numbers advance per transport attempt (gaps indicate failed
+attempts); snapshots have a separate sequence. Calls do not retry or poll. With only
+synchronous in-memory reads there is no pending task requiring cancellation.
+
+The stable error hierarchy separates authorization, symbol/address/area resolution,
+layout, codec decode, timeout/disconnection, checksum/protocol, short/extra response,
+invalid word, unknown fixture and stale-data failures. Checksum errors are injected
+outcomes only, not an RTU CRC implementation. Snapshot failure messages are bounded generic
+diagnostics, never raw lower-layer exceptions. No failed read is reported as a drive fault.
+
+**All register writes are prohibited and absent in Milestone 4.** Neither the reader nor
+the transport has a write or generic execute method; these results cannot authorize motion.
 
 Catalog inclusion is not access authorization. `REGISTER_CATALOG` is immutable and offers
 only symbolic lookup/listing. There is no arbitrary read/write interface. Electronic

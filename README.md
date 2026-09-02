@@ -3,7 +3,7 @@
 This repository defines a distributed control and monitoring system for a knee-test rig.
 The intended operator interface is a PySide6 application on Windows, while a Raspberry Pi
 will own motion communication and monitoring services. The project is currently at
-**Milestone 3: transport-free register codec**.
+**Milestone 4: offline read-only transport boundary**.
 
 Milestone 2 adds a minimal PySide6 operator shell and a high-level motion-client boundary
 over the Milestone 1 deterministic simulation. It exercises state presentation, command
@@ -15,9 +15,16 @@ word order, immutable documentary register metadata, and a conservative read-onl
 catalog. It performs no register or device I/O. The target drive's 32-bit layout and
 runtime address convention remain explicitly unverified.
 
+Milestone 4 composes that codec and catalog with a synchronous symbolic reader and an
+in-memory fake transport. Explicit immutable allowlists separate operational telemetry
+from disabled-by-default engineering inspection. One-shot snapshots preserve raw words,
+fixture-only validity, ambiguity, and per-field failures. All records are synthetic;
+no genuine raw drive captures are available or claimed.
+
 There is still no network client or server, Raspberry Pi service, monitoring service,
 Modbus driver, camera or temperature implementation, deployment unit, or executable real
-hardware-control path. The GUI remains simulation-only.
+hardware-control path. The GUI remains in-process simulation-only, is not connected to
+the new reader, and does not display hardware status.
 
 ## Responsibilities
 
@@ -88,6 +95,16 @@ The pure codec and catalog tests can be run independently:
 ```
 
 ## Repository layout
+
+Run the offline read-boundary tests with the existing project environment:
+
+```powershell
+.\.venv\Scripts\python -m pytest -q tests/unit/test_read_transport.py `
+  tests/unit/test_read_only_reader.py tests/unit/test_read_boundary_safety.py `
+  tests/integration/test_offline_read_snapshot.py
+```
+
+No port, device, real transport, or network service is needed by these tests.
 
 ```text
 servo-rs485-pyside6/

@@ -36,6 +36,13 @@ class VerificationStatus(StrEnum):
     HARDWARE_VERIFICATION_REQUIRED = "hardware_verification_required"
 
 
+class RegisterArea(StrEnum):
+    """No real register-area or function-code mapping has been established."""
+
+    UNRESOLVED = "unresolved"
+    OFFLINE_FIXTURE = "offline_fixture"
+
+
 @dataclass(frozen=True, slots=True)
 class RegisterSpec:
     name: str
@@ -55,10 +62,13 @@ class RegisterSpec:
     address_notation: str = "historical zero-based runtime address; no offset applied"
     word_count: int | None = None
     signed: bool | None = None
+    area: RegisterArea = RegisterArea.UNRESOLVED
 
     def __post_init__(self) -> None:
         if not self.name or not self.manual_label or not self.evidence_source:
             raise RegisterSpecValidationError("name, manual label, and evidence are required")
+        if not isinstance(self.area, RegisterArea):
+            raise RegisterSpecValidationError("area must be an explicit RegisterArea")
         if self.address is not None and (
             isinstance(self.address, bool)
             or not isinstance(self.address, int)

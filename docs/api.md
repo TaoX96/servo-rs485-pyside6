@@ -1,8 +1,14 @@
 # Proposed motion API
 
-This document designs a future REST/JSON API rooted at `/v1`. Milestone 3 uses the same
+This document designs a future REST/JSON API rooted at `/v1`. Milestone 4 retains the same
 framework-free command, state, telemetry, alarm, result, and error models through an
 in-process simulation client. It does not implement or expose a network client or service.
+
+Future telemetry APIs should consume typed symbolic-reader results and preserve raw-word
+identity, per-field validity, documentary ambiguity, acquisition time and hardware-layout
+verification. Milestone 4 implements only offline fixture results; it adds no endpoints
+and no arbitrary register access. A partial read failure is not a zero-valued sample or a
+drive alarm. Fixture decode success must never be labelled physical hardware confirmation.
 
 ## General rules
 
@@ -124,5 +130,5 @@ Electronic gearing, DI assignments, homing configuration, calibration acceptance
 other persistent or machine-defining changes are engineering-only. They are disabled by
 default, isolated from normal operation, require Servo Off, a logged reason, explicit
 authorization, configuration backup, and read-back verification. No engineering endpoint
-is implemented through Milestone 3, and future engineering design must still not expose an
+is implemented through Milestone 4, and future engineering design must still not expose an
 arbitrary register read/write API.

@@ -63,6 +63,29 @@ Qt. Catalog membership is documentary evidence, not permission to read or write 
 Any future transport remains exclusively inside the Pi motion service and must supply an
 explicit, hardware-verified 32-bit byte/word layout.
 
+### Offline read-only boundary (Milestone 4)
+
+```text
+Current offline-only flow:
+ReadOnlyServoReader -> ReadOnlyRegisterTransport -> FakeReadOnlyTransport -> synthetic words
+ReadOnlyServoReader -> immutable catalog and codec -> typed results / partial snapshots
+
+Future ownership boundary (real adapter NOT implemented):
+Future Pi Modbus adapter -> ReadOnlyRegisterTransport -> ReadOnlyServoReader -> codec/catalog
+```
+
+Only `FakeReadOnlyTransport` implements the new transport contract. The low-level protocol
+uses explicit area/address/count metadata, but `ReadOnlyServoReader.read` accepts only a
+symbolic catalog name; callers cannot override addresses. Neither interface has a write,
+generic execute, serial handle, or discovery operation. There is no framing or function
+code implementation. All catalog areas remain `UNRESOLVED`; `OFFLINE_FIXTURE` is a
+synthetic namespace, not Modbus function 03 or 04.
+
+The reader requires an explicit `OfflineFixtureInterpretation`, rejects unauthorized
+reads before transport calls, and has no retry, polling, cache, thread, GUI, or motion
+authorization coupling. Snapshots are bounded single-pass reads, not atomic drive samples.
+Injected clocks supply acquisition times. No reader is connected to the existing GUI.
+
 ### Raspberry Pi motion service
 
 The motion service is the only process allowed to own the USB-to-RS485 device. It validates

@@ -1,7 +1,7 @@
 # Suggested prompts for future milestones
 
-Give Codex one explicitly approved milestone at a time. Milestone 3 now provides a pure
-register codec and documentary catalog; it does not authorize transport or hardware access.
+Give Codex one explicitly approved milestone at a time. Milestone 4 now provides an offline
+read-only boundary; it does not authorize real transport, hardware access, or Milestone 5.
 
 ## Completed Milestone 1 - contracts and simulation
 
@@ -23,11 +23,15 @@ Implemented components are pure U16, I16, U32, and I32 codecs, explicit byte and
 order, immutable register specifications, and a conservative read-only catalog. No
 transport, hardware diagnostic, register I/O, or hardware operation was added.
 
-## Milestone 4 - transport design and offline adapter tests
+## Completed Milestone 4 - offline read-only transport boundary
 
-> Design the Pi-owned read-only transport boundary and test it only against a fake backend
-> and recorded word fixtures. Keep 32-bit layout unverified, add no hardware test, perform
-> no device discovery, and expose no writes, Servo On, homing, or motion.
+Implemented components are a read-only protocol, deterministic synthetic-word transport,
+immutable operational/engineering allowlists, symbolic reader, raw/decoded result metadata,
+and bounded partial snapshots. Area/function-code mapping and 32-bit hardware layout stay
+unverified. There is no real adapter, device discovery, write path, or GUI integration.
+
+Milestone 5 remains unstarted. The smallest next proposal is an offline review of adapter
+requirements and evidence gaps, with no port discovery, real transport, or hardware access.
 
 ## Later commissioning milestones
 
