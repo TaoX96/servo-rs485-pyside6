@@ -2,13 +2,17 @@
 
 This repository defines a distributed control and monitoring system for a knee-test rig.
 The intended operator interface is a PySide6 application on Windows, while a Raspberry Pi
-owns motion communication and monitoring services. The project is currently at
-**Milestone 1: simulation-only foundation**.
+will own motion communication and monitoring services. The project is currently at
+**Milestone 2: in-process simulation GUI**.
 
-Milestone 1 implements strict layered configuration, serializable state/API models,
-central command authorization, a transport-free servo interface, a deterministic fake
-servo, an in-process motion coordinator, and unit tests. It does not implement a network
-server, GUI, monitoring service, real servo driver, or executable hardware-control path.
+Milestone 2 adds a minimal PySide6 operator shell and a high-level motion-client boundary
+over the Milestone 1 deterministic simulation. It exercises state presentation, command
+authorization, leases, simulated enable and homing, bounded application-unit motion,
+finite cycles, pause/resume, controlled stop, and explicit simulated fault recovery.
+
+There is still no network client or server, Raspberry Pi service, monitoring service,
+Modbus driver, camera or temperature implementation, deployment unit, or executable real
+hardware-control path.
 
 ## Responsibilities
 
@@ -40,10 +44,23 @@ Local configuration will use `config/common.local.toml`, `config/pi.local.toml`,
 out of version control. The examples deliberately leave hardware addresses and calibrated
 motion limits unconfigured.
 
-## Run the simulation tests
+## Launch the in-process simulation GUI
 
-The simulation has no hardware, network, GUI, or real-time entry point. Exercise it
-through the deterministic unit suite:
+Install the application and development dependencies into the project virtual environment
+as shown above, then run:
+
+```powershell
+.\.venv\Scripts\python -m knee_rig.gui.app
+```
+
+The window is visibly labelled `SIMULATION`. Startup never connects, acquires a lease,
+enables the simulated servo, homes, moves, or resumes. Motion uses uncalibrated application
+units only; no joint-angle conversion is offered.
+
+## Run the simulation and GUI tests
+
+Qt smoke tests set `QT_QPA_PLATFORM=offscreen`, so the default suite does not require a
+physical display:
 
 ```powershell
 .\.venv\Scripts\ruff check .

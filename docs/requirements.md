@@ -1,14 +1,18 @@
 # Requirements
 
-## Milestone 1 scope
+## Milestone 2 scope
 
-Milestone 1 provides typed layered configuration, serializable shared models, centralized
-state authorization, a hardware-independent servo protocol, deterministic `FakeServo`,
-and an in-process motion coordinator with command idempotency. Simulation operations use
-explicit ticks and never sleep or access hardware or networking.
+Milestone 2 retains the Milestone 1 typed configuration, shared models, centralized state
+authorization, deterministic `FakeServo`, and idempotent in-process coordinator. It adds a
+minimal PySide6 GUI that accesses the core only through a `MotionClient` abstraction and
+an `InProcessSimulationClient`. Simulation progression uses a non-blocking Qt timer to
+request explicit bounded ticks; the deterministic core remains independent of wall time.
 
-It contains no HTTP server, GUI, monitoring implementation, real servo driver, Modbus
-communication, real Servo On, real homing or motion, or systemd deployment.
+The GUI displays orthogonal state, telemetry validity and explicit units, lease state,
+central authorization outcomes, bounded event history, finite-cycle progress, and
+simulation-only fault injection. It contains no HTTP/WebSocket transport, monitoring
+implementation, real servo driver, Modbus communication, real Servo On, real homing or
+motion, or systemd deployment.
 
 ## System responsibilities
 

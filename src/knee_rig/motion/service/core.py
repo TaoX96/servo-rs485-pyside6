@@ -252,7 +252,14 @@ class MotionCoordinator:
         if state.connection is ConnectionState.COMMUNICATION_FAULT:
             self._recovery_required = True
             if self._service_fault_code is None:
-                self._service_fault_code = "COMMUNICATION_FAULT"
+                if state.motion is MotionState.MOTION_FAULT:
+                    self._enter_service_fault(
+                        "COMMUNICATION_FAULT_STOP_UNCONFIRMED",
+                        "Communication was lost during an active operation; software cannot "
+                        "confirm a controlled stop.",
+                    )
+                else:
+                    self._service_fault_code = "COMMUNICATION_FAULT"
 
         active_id = self._active_command_id
         if active_id is not None:

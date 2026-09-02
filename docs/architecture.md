@@ -31,17 +31,29 @@ flowchart LR
 ### Windows PySide6 GUI
 
 The GUI presents operator controls and status, validates input for usability, obtains a
-single-controller lease, and calls high-level network operations. The Pi repeats all
-safety-relevant validation and authorization. The GUI never imports a servo transport,
-opens serial, or exposes register addresses.
+single-controller lease, and calls high-level `MotionClient` operations. A future Pi
+service will repeat all safety-relevant validation and authorization behind a network
+adapter. The GUI never imports a servo transport, opens serial, or exposes register
+addresses.
+
+In Milestone 2, no network operation exists. The concrete flow is entirely in-process:
+
+```text
+PySide6 GUI -> MotionClient -> InProcessSimulationClient
+            -> MotionCoordinator -> FakeServo
+```
+
+Only the in-process adapter knows the coordinator and fake servo. Main-window logic uses
+the high-level client contract so a later network implementation need not change operator
+presentation or weaken command-side authorization.
 
 ### Raspberry Pi motion service
 
 The motion service is the only process allowed to own the USB-to-RS485 device. It validates
 commands, authorizes state transitions, maintains command idempotency and the control
 lease, drives the allowlisted A6-RS workflow, and publishes motion state and telemetry.
-Milestone 1 implements only a synchronous simulation core, deterministic fake servo, and
-framework-free contracts. It contains no network server or real drive transport.
+Milestone 2 adds only an in-process GUI adapter around the synchronous simulation core.
+It contains no network server, network client, or real drive transport.
 
 ### Raspberry Pi monitoring service
 
