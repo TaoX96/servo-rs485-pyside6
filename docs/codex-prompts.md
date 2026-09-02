@@ -1,14 +1,14 @@
 # Suggested prompts for future milestones
 
-Give Codex one explicitly approved milestone at a time. Milestone 4 now provides an offline
-read-only boundary; it does not authorize real transport, hardware access, or Milestone 5.
+Give Codex one explicitly approved milestone at a time. Milestone 5 audits hardware
+readiness; it does not authorize real transport, hardware access, or Milestone 6.
 
 ## Completed Milestone 1 - contracts and simulation
 
 Implemented components are strict typed configuration, shared API/state models, centralized
 authorization, `ServoInterface`, deterministic `FakeServo`, an in-process coordinator,
-and hardware-independent unit tests. There is still no network, GUI, monitoring, or real
-driver implementation.
+and hardware-independent unit tests. At that milestone there was no network, GUI,
+monitoring, or real driver implementation; Milestone 2 subsequently added the simulation GUI.
 
 ## Completed Milestone 2 - in-process simulation GUI
 
@@ -30,8 +30,23 @@ immutable operational/engineering allowlists, symbolic reader, raw/decoded resul
 and bounded partial snapshots. Area/function-code mapping and 32-bit hardware layout stay
 unverified. There is no real adapter, device discovery, write path, or GUI integration.
 
-Milestone 5 remains unstarted. The smallest next proposal is an offline review of adapter
-requirements and evidence gaps, with no port discovery, real transport, or hardware access.
+## Completed Milestone 5 - hardware readiness and evidence audit
+
+Documentation-only evidence analysis covers the seven protected sources, all 14 current
+catalog entries, hardware identity, communication/address/layout gaps and genuine-capture
+absence. Gate A passes; B/C/D remain blocked. See [evidence](evidence-matrix.md),
+[readiness](hardware-readiness.md) and the [future commissioning design](read-only-commissioning.md).
+No code, tests, dependencies or configuration changed; no real adapter/skeleton, device
+enumeration, hardware access or new physical verification was introduced.
+
+## Proposed Milestone 6 - offline evidence intake only (not started)
+
+Review user-supplied redacted drive/motor/adapter labels, the exact compatible communication
+manual and existing wiring/settings/safety records. Update the evidence matrix and
+reassess Gate B; do not implement an adapter, discover devices, connect hardware, change
+settings or execute a read. Keep unresolved evidence blocked rather than inferring FC,
+offset or layout. Any later implementation and any physical test need separate explicit
+authorization. Do not begin this proposal without user approval.
 
 ## Later commissioning milestones
 

@@ -1,0 +1,274 @@
+# Milestone 5 evidence matrix
+
+Audit date: 2026-09-02. Scope: local documentary analysis only. Current safety level:
+**Simulation**. No device was inspected, enumerated, contacted, read, or written. No
+legacy code was imported or executed. Nothing here authorizes hardware access.
+
+## Evidence vocabulary
+
+Levels describe individual claims, not entire documents or devices. Documentary support,
+physical verification, and permission to operate are separate dimensions.
+
+| Level | Meaning |
+|---|---|
+| `PHYSICAL_DEVICE_VERIFIED` | Recorded observation of the identified installed device under an approved procedure. No claim receives this level in Milestone 5. |
+| `EXACT_MODEL_MANUAL_CONFIRMED` | Manufacturer statement matched to the exact target model and firmware applicability. No such match is currently established. |
+| `SERIES_MANUAL_CONFIRMED` | Statement present in the supplied A6-RS series excerpt; exact target applicability unconfirmed. |
+| `MANUAL_AND_LEGACY_AGREE` | A specifically named field agrees between series documentation and historical code; not proof that the code ran successfully or that the device remains configured that way. |
+| `LEGACY_CODE_ONLY` | Historical source assertion or API argument, without matching manufacturer/capture evidence for that claim. |
+| `PROJECT_DOCUMENTATION_ONLY` | Historical report or current repository design assertion; the source must distinguish the two. |
+| `INFERRED` | Hypothesis derived from evidence, never a confirmed setting or permission. |
+| `CONFLICTING` | Sources disagree or a source is internally inconsistent; retain both statements. |
+| `MISSING` | Required evidence is absent from the supplied local materials. |
+| `HARDWARE_VERIFICATION_REQUIRED` | Open physical verification obligation, which may coexist with documentary support. |
+
+The existing catalog enum `MANUAL_CONFIRMED` must be read as documentary, not physical,
+confirmation. Its `AMBIGUOUS` state includes the speed-width conflict below. This audit
+does not change enums, metadata, allowlists, fixtures, or configuration.
+
+## Source inventory and provenance
+
+Page numbers below are one-based PDF pages; printed page numbers are given in parentheses.
+Links refer only to supplied local files. Bibliographic web links were not visited.
+
+| ID | Actual protected filename / type | Evidence scope |
+|---|---|---|
+| P | [parameter lists of A6-RS series servo drive manual.pdf](<reference/parameter lists of A6-RS series servo drive manual.pdf>) / PDF, 88 pages | Chapter 8 excerpt, printed pp. 241–328. Series parameter tables, not a complete communication manual. |
+| M | [position mode of A6-RS series servo drive manual.pdf](<reference/position mode of A6-RS series servo drive manual.pdf>) / PDF, 68 pages | Chapter 4 excerpt, printed pp. 58–125. Series position/homing descriptions. |
+| L | [nonverbose_bestCode.py](reference/nonverbose_bestCode.py) / Python | Historical servo-control source, read as text only. No recorded read responses. |
+| D | [TechnikerSchule März2025_Gruppe 1 Dokumentation FINAL.pdf](<reference/TechnikerSchule März2025_Gruppe 1 Dokumentation FINAL.pdf>) / PDF, 39 pages | Historical rig design, procurement narrative, calculations, illustrations and bibliography; not an as-built inspection record. |
+| C | [CamTemControlMonitorv3.py](reference/CamTemControlMonitorv3.py) / Python | Historical camera/1-Wire monitoring source; no servo protocol verification. |
+| Z | [Raspberry Pi Zero 2 W Pinout _ Pinouts.pdf](<reference/Raspberry Pi Zero 2 W Pinout _ Pinouts.pdf>) / PDF, 3 pages | Third-party generic pinout, not installed-board or OS evidence. |
+| R0 | [reference README](reference/README.md) / Markdown | Historical list, not proof that every named file was supplied. |
+| R | Current register catalog, register-map, configuration examples and tests | Current design and synthetic offline behavior, not legacy measurements. |
+
+There are seven protected files: two Python, four PDF, one Markdown. R0 names older
+`(1)` variants, `Tao_Xiong_Thesis.pdf` and a LabVIEW VI that are not present under those
+names. No full/model-specific A6-RS communication manual or motor datasheet is supplied.
+The originals and their recorded seven-file SHA-256 baseline remain unchanged.
+
+## Hardware identity evidence
+
+For each row, the last column distinguishes blockers: **B** = real raw-read gate,
+**C** = trusted interpretation gate, **D** = motion gate. `D only` does not waive Gate B's
+safe energization, disabled-servo and restraint review. Unknown safety facts relevant to
+energization block B even when no motion is requested. All installed identities remain
+`HARDWARE_VERIFICATION_REQUIRED`; no photograph in a historical report proves today's rig.
+Verification actions below are future evidence requests, not instructions to energize or
+open equipment. See the [safe request checklist](hardware-readiness.md#prioritized-user-evidence-request).
+
+### Drive and motor
+
+| Item | Supported value and source / level | Confidence limitation | Required verification | Blocks |
+|---|---|---|---|---|
+| Drive manufacturer / family | STEPPERONLINE A6 in D pp. 24, 26, 31, 39; A6-RS in P/M and R; `PROJECT_DOCUMENTATION_ONLY` / `SERIES_MANUAL_CONFIRMED` | Family evidence, not exact installed identity | Accessible nameplate and exact compatible manual | B, D |
+| Drive exact model / serial | Unknown; `MISSING` | Do not derive a drive model from motor power | Nameplate; retain full serial privately, share redacted identifier | B, D (public full serial not needed) |
+| Firmware / communication option and version | Actual values unknown; P p. 76 (316) lists U42.00 ARM, .01 FPGA, .05 internal software, .06 Modbus version; `SERIES_MANUAL_CONFIRMED` labels only | Not runtime addresses or observed version values | Existing version record or separately authorized safe display observation; compatibility assessment | B, C, D |
+| Drive rated power / supply voltage | Installed values unknown. P pp. 85–86 (325–326) lists 750RS as 0.75 kW, single-phase 220 V; `SERIES_MANUAL_CONFIRMED` candidate specification only | D's 750 W motor does not identify its drive; never select supply from this table | Drive nameplate and qualified supply review | B, D |
+| Drive encoder type / resolution | Unknown; P p. 76 has encoder version/model labels; `MISSING` installed data | No encoder resolution may be decoded from a candidate model name | Matched drive/motor/encoder documents and installed labels | C for encoder units, D; B compatibility review |
+| Keypad / commissioning parameter identity | P p. 76 lists U42.10 drive, .11 motor, .12 encoder, .13 power supply model; M p. 68 mentions keypad/Synland; `SERIES_MANUAL_CONFIRMED` | Not confirmation of tool compatibility or current values | Exact manual and existing read-only display records, no software connection now | B, C, D |
+| Motor exact model | D p. 39 bibliography names `A6M80-750H2B1-M17_Full_Datasheet.pdf`; `PROJECT_DOCUMENTATION_ONLY` candidate | Datasheet absent; cannot claim installed model from link | Motor nameplate and matching supplied datasheet | B safe setup, C, D |
+| Motor rated power / torque | D pp. 24, 26: 750 W; p. 31: 2.39 Nm; `PROJECT_DOCUMENTATION_ONLY` | Historical selection/calculation, not measured or nameplate-confirmed | Nameplate/datasheet, not inferred ratings | C torque interpretation, D; B safe setup |
+| Motor rated speed | Unknown; D p. 30 uses 750 rpm in a motion calculation; `MISSING` rating | Calculated operating speed is not rated speed | Nameplate/datasheet | C plausibility, D only |
+| Motor encoder | Unknown; `MISSING` | Model-code suffix is not verified encoder information | Matching encoder/motor datasheet and label | C, D only |
+| Motor brake presence | D p. 24 says version with brake was ordered because non-brake delivery was delayed; `PROJECT_DOCUMENTATION_ONLY` | Procurement account, not present brake condition | Nameplate and qualified as-built review | B restraint, D |
+| Brake voltage / control method | Unknown; `MISSING` | Do not assume brake release/holding behavior on Servo Off or power loss | Brake data and electrical schematic, qualified review | B, D |
+| Mounting orientation | D p. 22 describes adapter plate and a gearbox rotated 90 degrees; `PROJECT_DOCUMENTATION_ONLY` | Historical packaging, not installed axes/signs | Isolated rig photos and assembly drawing | B restraint, D |
+
+### Mechanical system
+
+| Item | Supported value and source / level | Confidence limitation | Required verification | Blocks |
+|---|---|---|---|---|
+| Gearbox type / ratio | Worm gearbox D pp. 15, 22; ratio 50 assumed in p. 30 calculation; p. 39 NMRVS50 / `nmrvs50-g50-d19` bibliography; `PROJECT_DOCUMENTATION_ONLY` | Not as-built gearing or proof of self-locking | Gearbox label/datasheet and assembly evidence | C angle relation, D; B load restraint |
+| Coupling / output-shaft relationship | D p. 22 describes lower-shaft `Federverbindung` and adapter mounting; `PROJECT_DOCUMENTATION_ONLY` | No verified motor-to-joint transfer function | Assembly/coupling drawings, isolated inspection | C angle relation, D; B integrity |
+| Positive joint direction | Unknown; `MISSING` | Legacy forward/reverse names are not a physical sign convention | Later separately reviewed direction verification | D only |
+| Safe travel range | Unknown; D p. 29 uses 0–45 degrees in calculations; `PROJECT_DOCUMENTATION_ONLY` design range | Not approved operating limits or calibration | Mechanical review and measured allowed envelope | D only |
+| Mechanical hard stops | Installed details unknown; `MISSING` | No evidenced location/strength | Isolated inspection/drawing and qualified review | D; B if needed for restraint |
+| Gravity-loaded behavior | Counterweights and pinch hazards described D pp. 12, 29; `PROJECT_DOCUMENTATION_ONLY` | No proof of static safety with torque removed | Approved load-restraint/energization plan | B, D |
+| Holding torque / load | D pp. 29–31 calculates loads and required torque; `PROJECT_DOCUMENTATION_ONLY` | Calculations do not validate holding, brake, gearbox or current assembly | Mechanical safety review, brake behavior evidence | B, D |
+| Backlash | Unknown; `MISSING` | Cannot infer from gearbox category | Later approved measurement/design tolerance | C precision, D only |
+| Known zero / reference position | Unknown; `MISSING` | Homing descriptions are not a commissioned zero | HSW placement, homing and calibration evidence | D only |
+
+### Adapter and Raspberry Pi
+
+| Item | Supported value and source / level | Confidence limitation | Required verification | Blocks |
+|---|---|---|---|---|
+| Adapter manufacturer / exact model | Waveshare D p. 26; illustration labelled USB TO RS232/485/TTL; `PROJECT_DOCUMENTATION_ONLY` | Product picture, no installed part/revision | Front/back label and matching datasheet | B, D |
+| USB VID/PID / device serial availability | Unknown; `MISSING` | No device enumeration was performed | Existing records first; future authorized Pi observation | B stable identity, D |
+| Galvanic isolation / automatic direction | Unknown; `MISSING` | Brand/product resemblance does not prove either feature | Exact adapter manual and qualified review | B, D |
+| Biasing / termination | Unknown; `MISSING` | No resistor/topology evidence | Existing schematic, isolated wiring review | B, D |
+| Ground/reference terminal | A+, B- and ground symbol appear in D p. 26 illustration; `PROJECT_DOCUMENTATION_ONLY` | Neither installed pinout nor drive-side RJ45 assignment confirmed | Matched adapter/drive pinouts and isolated A/B/reference review | B, D |
+| Cable and stable Linux identity | Custom RJ45 cable D p. 26; actual wiring and by-id identity missing | Never copy a generic cable pinout or substitute a transient device path | Continuity review by qualified person while isolated; future explicit by-id observation | B, D |
+| Pi exact model | Zero 2 W in R design and Z p. 2 generic pinout; `PROJECT_DOCUMENTATION_ONLY` | Neither identifies the installed board | Accessible board label or existing inventory | B host implementation, D |
+| Pi OS / architecture | Unknown; `MISSING` | Generic CPU capability does not establish installed OS architecture | Later authorized local OS/architecture/Python observation | B host implementation, D |
+| Pi power supply / USB topology | Unknown; `MISSING` | No safe power/OTG/hub/as-built evidence | Existing supply labels and topology drawing | B, D |
+| Network topology | Unknown; future API isolation in R; `PROJECT_DOCUMENTATION_ONLY` design | Not needed for a local first read; no network discovery authorized | Later deployment review using redacted diagram | Not B for local test; required before networked motion |
+| Service account / serial permissions | Separate least-privilege motion and monitoring identities in R deployment design; actual users/groups unknown | Policy, not installed permissions | Later authorized permission/sole-owner review, no changes now | B host ownership, D |
+| Camera / temperature | HQ camera and DS18B20 intended in R; C camera/1-Wire functions around lines 632–680; `PROJECT_DOCUMENTATION_ONLY` / `LEGACY_CODE_ONLY` | Code use does not prove sensor identity or pin wiring | Later independent monitoring inventory | Neither B nor D motion authorization; outside this commissioning path |
+
+### Safety hardware
+
+All installed values below are `MISSING` and `HARDWARE_VERIFICATION_REQUIRED`. R safety
+policy requires them; D p. 12 is a hazard narrative, not a qualified as-built review.
+
+| Item | Evidence limitation / required verification | Raw-read blocker | Motion blocker |
+|---|---|---|---|
+| E-stop device | Need device identity, independent circuit and qualified review; software stop is not an E-stop | B safe energization | D |
+| STO availability / wiring | Exact drive capability and wiring unknown; do not assume STO exists | B inhibition review | D |
+| Servo Enable removal | Need actual signal path, active levels and behavior without holding torque | B disabled-state assurance | D |
+| Contactor / safety relay | Need part numbers, schematic and validated isolation function | B safe energization | D |
+| PL switch | Need identity, independent travel protection and installation evidence | D only unless used for B restraint | D |
+| NL switch | Same evidence independently for negative travel | D only unless used for B restraint | D |
+| HSW switch | Need identity, unique reference and suitability for selected homing mode | No for a disabled static raw read | D |
+| Switch type / NO or NC / PNP, NPN or dry contact | All unknown; obtain each switch datasheet and as-wired truth table | B for enable/safety signals; otherwise D | D |
+| DI common wiring | Unknown; qualified schematic/pinout and isolated verification | B if it affects inhibition | D |
+| Mechanical switch placement | No as-built dimensions relative to travel/hard stops | D only unless part of B restraint | D |
+| Safe stopping distance | No validated speed/load/stop envelope | Not needed for no-motion raw read with approved restraint | D |
+| Qualified electrical review | No signed inspection or safe energization record supplied | B | D |
+
+## Communication evidence
+
+`B`/`C` below refer to the [separate readiness gates](hardware-readiness.md). No factory
+default is an observed active setting. No Modbus standard or library behavior is filled
+in from memory. P p. 36–37 (276–277), section 8.9, is a settings table, not a wire-protocol
+specification. Its separate commissioning-software settings C0A.08–0E must not be confused
+with C0A.00–06; P p. 85 (325) discusses C0A.09/.0A, not missing Modbus framing details.
+
+| Claim | Available evidence and level | Unresolved consequence / action |
+|---|---|---|
+| Modbus RTU support | P names Modbus parameters; L line 224 uses `MODE_RTU`; series Modbus support plus `LEGACY_CODE_ONLY` RTU selection | Exact target RTU compatibility/manual required for B |
+| Slave address | P C0A.00 range 1–255/default 1; L line 218 selects 1; `MANUAL_AND_LEGACY_AGREE` on default/selection only | Actual station unknown; B, no station scan |
+| Baud rate | P C0A.01 supports 2400–115200, selector 3=9600, default 7=115200; L line 219 uses 9600 | Series support confirmed; historical setting differs from factory default, not proof of a current mismatch; B |
+| Data bits | L line 220 uses 8; `LEGACY_CODE_ONLY` | No complete framing specification supplied; B |
+| Parity / stop bits | P C0A.02 default 0=no parity/one stop; L lines 221–222 match; `MANUAL_AND_LEGACY_AGREE` on selection | Actual format unknown; B |
+| Host timeout | L line 223 uses 1 second; `LEGACY_CODE_ONLY` | Not a drive-mandated timeout; future bounded timeout must be approved for B |
+| Supported function codes | L explicit `functioncode=6` occurs in writes, not reads; `LEGACY_CODE_ONLY` write API argument | No supported read FC established; no inference of 03/04 or defaults from MinimalModbus; B |
+| Parameter-read / monitor-read FC | `MISSING` for both | Need exact communication manual; register labels/RO classification do not identify FC; B |
+| Exception responses / maximum registers per request | `MISSING`; fake exceptions/count tests prove offline validation only | Exact framing/exception/count rules needed for B; use one reviewed request, no guessing |
+| Inter-frame delay | `MISSING`; L sleeps are motion-action timing | Need protocol timing, not historical sleep values; B |
+| Response delay | P C0A.03 range 1–1000 ms, default 1 ms; `SERIES_MANUAL_CONFIRMED` | Active delay and relation to host timeout unknown; B |
+| Broadcast behavior | `MISSING` | No broadcast access in proposed test; do not infer behavior from station range |
+| CRC behavior | `MISSING` in supplied excerpts; fake checksum failure is synthetic | Exact frame validation/CRC specification required before concrete implementation; B |
+| Address notation / area / zero versus one base | P group/index labels; L numeric constants; R preserves numeric map | No deterministic RTU mapping or area known; B, see next section |
+| 16-bit byte order | No wire captures or explicit supplied byte-order rule; `MISSING` | Synthetic codec layouts do not prove wire-to-word assembly; B framing, C interpretation |
+| 32-bit word order | P C0A.06: 0=low 16 before high 16 (default 0), 1=high before low; `SERIES_MANUAL_CONFIRMED` | Actual setting/compatibility unknown; C for 32-bit fields, not a blocker for an otherwise approved U16 raw read |
+| 32-bit byte order / library terminology | L uses `BYTEORDER_LITTLE` for two-register writes; `LEGACY_CODE_ONLY` | Not independent confirmation of byte-within-word order or equivalence to codec names; C |
+| Signed representation | P labels I16/I32 and signed ranges; R codec tests two's complement | Series signed types confirmed; exact wire representation remains unverified, C |
+| Atomic multi-register reads | `MISSING`; offline snapshots explicitly non-atomic | Need coherent-pair guarantees and supported count before trusted 32-bit telemetry, C; proposed first read is one U16 |
+| Read side effects | Monitor tables say read only; no complete access/side-effect specification | RO does not alone prove a harmless protocol transaction; exact first-read safety review required for B |
+| Stopped/disabled requirements for parameter reads | P's modification-mode column describes writes, not read permission; `MISSING` read restrictions | Verify exact read conditions. Proposed physical reads require disabled servo regardless; B for selected field |
+
+## Address-notation comparison
+
+| Notation | What is actually documented | Mapping / base status |
+|---|---|---|
+| `C03.00`, `C03.02`, `C11.06` | Human-facing parameter labels, P pp. 12, 58 (252, 298) | Label suffix is not demonstrated to be a PDU offset |
+| `U40.16`, `U41.0A` | Monitor labels, P pp. 72, 75 (312, 315) | Not independently a transport address |
+| `2003h/C03`, `2011h/C11`, `2040h/U40`, `2041h/U41` | Group identifiers in P section headings | No supplied equation maps these to RTU addresses |
+| Group/index pairs | P C03.00 index 01h; C03.02 index 03h; U40.16 index 17h; U41.0A index 0Bh | The differing suffix/index numbering does not authorize adding/subtracting one |
+| Historical `0x0300`, `0x410A` | L constants; `0x0300` is passed to a write API, `0x410A` is an unused status constant | API argument evidence, not a captured PDU or confirmed base |
+| Current-map `0x4010`, `0x4016`, `0x4108` | R map/catalog, absent as corresponding constants/read calls in supplied L | `PROJECT_DOCUMENTATION_ONLY` numeric assertions, not verified legacy reads |
+| MinimalModbus arguments | L passes constants to `write_register`/`write_long` | Library-to-wire conversion unverified; library source was not imported/executed to infer it |
+| Modbus PDU address | No genuine request/response capture or explicit supplied mapping | `MISSING`; B blocker |
+| Human-facing register number | No separate numbered-register convention established | `MISSING`; no 4xxxx notation or +/-1 conversion introduced |
+| Object-style `6040h`, `6064`, `607C`, `60E6` | M p. 68 (125), homing mode 35 discussion, uses control-word/position/home-offset notation | CiA 402-style resemblance is `INFERRED`; supplied text does not establish a CiA 402-to-RTU map. Never use these as transport addresses or trigger commands |
+
+The current `RegisterSpec.address_notation` string calls its stored numeric value a
+"historical zero-based runtime address". That is **unverified project wording**, not an
+established base convention. The catalog cautions and `UNRESOLVED` area remain controlling;
+Milestone 5 changes no source code and approves no offset. Formula generation, automatic
+`-1`/`+1` fallback, group arithmetic and address scanning are prohibited.
+
+## Register evidence matrix: all 14 current catalog entries
+
+Two joined tables avoid hiding provenance in a very wide table. Symbols identify the same
+entry in both tables. Types, word counts and scales below are current documentary codec
+metadata, not hardware qualification. `U` = unsigned, `I` = signed; each word is 16 bits.
+Dash means no unit/scale in the catalog. RW is documentary access, **not write permission**.
+Every entry has area `UNRESOLVED`, **read FC unknown**, real raw reading **NOT READY**, and
+trusted physical interpretation **NOT READY**. These shared fields apply to every row.
+
+| Symbol | Manual label | Stored numeric address | Type / bits / words / signed | Unit; scale | Documentary access / offline read policy | P PDF page (printed) |
+|---|---|---|---|---|---|---|
+| POSITION_REFERENCE_SELECTION | C03.00 | 0x0300 | U16 / 16 / 1 / no | —; — | RW; engineering only | 12 (252) |
+| GEAR_1_NUMERATOR | C03.02 | 0x0302 | U32 / 32 / 2 / no | —; — | RW; engineering only | 12 (252) |
+| GEAR_1_DENOMINATOR | C03.04 | 0x0304 | U32 / 32 / 2 / no | —; — | RW; engineering only | 12 (252) |
+| PLAN_MODE | C11.00 | 0x1100 | U16 / 16 / 1 / no | —; — | RW; engineering only | 58 (298) |
+| GROUP_1_DISPLACEMENT | C11.06 | 0x1106 | I32 / 32 / 2 / yes | application_unit; 1 | RW; neither allowlist | 58 (298) |
+| SPEED_FEEDBACK | U40.01 | 0x4001 | I16 / 16 / 1 / yes in table; prose says 32-bit | rpm; 1 | RO; operational, ambiguous raw-only result | 71 (311), 87 (327) |
+| TORQUE_FEEDBACK | U40.03 | 0x4003 | I16 / 16 / 1 / yes | percent_rated_torque; 1/10 | RO; operational | 72 (312) |
+| BUS_VOLTAGE | U40.06 | 0x4006 | U16 / 16 / 1 / no | V; 1/10 | RO; operational | 72 (312) |
+| POSITION_DEVIATION | U40.10 | 0x4010 | I32 / 32 / 2 / yes | encoder_pulse (P); 1 | RO; operational | 72 (312) |
+| POSITION_FEEDBACK | U40.16 | 0x4016 | I32 / 32 / 2 / yes | application_unit; 1 | RO; operational | 72 (312) |
+| MOTOR_TEMPERATURE | U40.31 | 0x4031 | I16 / 16 / 1 / yes | deg_C; 1/10 | RO; operational | 73 (313) |
+| ENCODER_TEMPERATURE | U40.32 | 0x4032 | I16 / 16 / 1 / yes | deg_C; 1/10 | RO; operational | 73 (313) |
+| PLAN_OPERATION_GROUP | U41.08 | 0x4108 | U16 / 16 / 1 / no | —; — | RO; operational | 75 (315) |
+| SERVO_STATUS | U41.0A | 0x410A | U16 / 16 / 1 / no | —; — | RO; operational | 75 (315) |
+
+All non-speed catalog verification states remain `HARDWARE_VERIFICATION_REQUIRED` (HVR
+below); speed remains `AMBIGUOUS`. Offline pure decoding supports each listed primitive
+with explicit layout, but speed's reader result deliberately has no decoded scalar.
+Displacement can be codec-tested, not read through either existing reader allowlist.
+
+Verification action **V** for every row: match model/firmware/manual; confirm harmless read
+access, FC, address/base, width/count and wire-to-word assembly; obtain separately approved
+raw capture and independent observation; confirm signedness, scale, plausibility,
+freshness and repeatability before trusted use. **L32** additionally requires the
+[static four-layout comparison](read-only-commissioning.md#32-bit-layout-verification).
+
+| Symbol | Historical-code evidence (L lines) / agreement | Current state; offline support | Required verification beyond V / safety relevance |
+|---|---|---|---|
+| POSITION_REFERENCE_SELECTION | 53 constant; 235 write of selection 1 agrees with P internal planning option (`MANUAL_AND_LEGACY_AGREE` on option, not address) | HVR; yes | Machine-defining; engineering read disabled by default; no source-selection write |
+| GEAR_1_NUMERATOR | 54 constant, 26 assignment 9, 230 two-register write; U32 width agrees, actual value `LEGACY_CODE_ONLY` | HVR; yes | L32; verify active gear separately; never treat 9/16384 as joint calibration |
+| GEAR_1_DENOMINATOR | 55 constant, 25 assignment 16384, 232 two-register write; same narrow width agreement | HVR; yes | L32; machine-defining conversion; no parameter change for testing |
+| PLAN_MODE | 63 constant; 237 write of 0 agrees with P single-operation option | HVR; yes | Machine-defining motion configuration; engineering only |
+| GROUP_1_DISPLACEMENT | 70 constant; 165 signed two-register write agrees with P I32; old angle comments do not establish degrees | HVR; codec yes, reader prohibited | L32; neither read allowlist; application units only; motion configuration |
+| SPEED_FEEDBACK | 43 unused numeric constant, no read; P table/prose `CONFLICTING` | AMBIGUOUS; primitive codec yes, reader scalar withheld | Resolve 16/32-bit conflict before selecting real count; never use for safety feedback |
+| TORQUE_FEEDBACK | 44 unused numeric constant; type/scale from P (`SERIES_MANUAL_CONFIRMED`), not measured agreement | HVR; yes | Confirm 0.1% convention/reference rated torque; monitoring is not independent torque protection |
+| BUS_VOLTAGE | 45 unused numeric constant; type/scale from P | HVR; yes | Confirm 0.1 V and independent reading; not proof supply is isolated or safe to touch |
+| POSITION_DEVIATION | No corresponding constant/read in L; numeric address only R (`PROJECT_DOCUMENTATION_ONLY`) | HVR; yes | L32; distinguish encoder pulses from application units/degrees |
+| POSITION_FEEDBACK | No corresponding constant/read in L; numeric address only R | HVR; yes | L32; not a calibrated joint angle or verified home; not sole moving layout reference |
+| MOTOR_TEMPERATURE | 47 unused numeric constant; type/scale from P | HVR; yes | Validate sensor meaning/availability and 0.1 deg C; not safety-rated protection |
+| ENCODER_TEMPERATURE | 48 unused numeric constant; type/scale from P | HVR; yes | Same; do not substitute motor temperature |
+| PLAN_OPERATION_GROUP | No corresponding constant/read in L; numeric address only R | HVR; yes | P says 0–16; group alone cannot prove motion completed or authorize the next cycle |
+| SERVO_STATUS | 30 unused constant; P states 0 not ready, 1 ready, 2 running, 3 fault | HVR; yes | Independent disabled-state evidence required; status is not an STO or safe-holding indication |
+
+L contains no `read_register` or `read_long` call. Constants in that file are not evidence
+of successful reads. Its startup reset/DI/gearing writes and motion functions are unsafe
+historical behavior, not an approved workflow. No legacy code was executed. The larger
+historical table in register-map.md is not the 14-entry executable catalog; neither is
+expanded by this audit. C0A/U42 labels above are evidence targets only, not new entries.
+
+## Genuine capture status
+
+**No genuine raw A6-RS Modbus capture is currently available.**
+
+The repository file inventory, supplied source/documents and offline fixtures contain no
+record with a genuine paired request/response and sufficient drive context. Synthetic
+words, write-call arguments, prose values, GUI state/event capture and camera image
+capture are not wire evidence. No capture was generated during this audit.
+
+A future capture must preserve original request and response bytes, explicit CRC inclusion,
+UTC timestamp and acquisition context, exact drive identity/firmware and active settings,
+slave, FC, register label/address/base/area/count, adapter/host identity, expected independent
+keypad value, observed raw words, errors and the approving procedure/reviewer. Use the
+[recording template](read-only-commissioning.md#recording-template); never fabricate missing
+fields or store credentials.
+
+## Conflicts and missing evidence
+
+- Speed width remains internally conflicting in P; exact compatible documentation is needed.
+- C0A.06 documents selectable word order, not a verified byte/word layout. Legacy
+  `BYTEORDER_LITTLE`, default low-word-first and four passing codec layouts are distinct facts.
+- P default baud 115200 versus L 9600, and P default gears 131072/10000 versus L 9/16384,
+  describe different documentary settings, not proof of present values or safe calibration.
+- Object-style homing notation in M p. 68 has no established RTU mapping. No offset or FC
+  can be derived from it, the group/index tables, or a successful-looking numeric response.
+- D's proposed unattended endurance use (p. 14) is superseded by the current prohibition
+  on unattended real-hardware tests. D's Windows-owned RS485 diagram is historical only;
+  future ownership belongs exclusively to the Pi motion service.
+- Exact drive/motor/adapter identity, firmware compatibility, full communication manual,
+  as-built wiring/safety review and genuine captures are missing. Historical datasheet
+  links, R0's absent files and generic board pinouts do not close those gaps.
+- Calibration, HSW/PL/NL installation, homing, direction, limits, brake and load-holding
+  behavior remain unverified. Read-only success could not resolve or authorize motion.

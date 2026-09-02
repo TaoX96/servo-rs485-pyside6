@@ -3,16 +3,27 @@
 This is design evidence for the future Raspberry Pi motion service. Milestone 4 composes
 the pure codec/catalog with an offline fake transport and symbolic read-only reader. The
 Windows GUI must never use this map or access registers. No real register access exists
-through Milestone 4. Future operator API operations remain high-level and allowlisted;
+through Milestone 5. Future operator API operations remain high-level and allowlisted;
 this table must not be exposed as a general-purpose register interface.
 
 All entries must be verified against the supplied A6-RS parameter-list PDF and the exact
-installed firmware. Address notation follows the historical Python test code.
+installed firmware. Numeric notation is retained from the historical project map; some
+entries occur in legacy Python, others only in current repository documentation. See the
+[Milestone 5 evidence matrix](evidence-matrix.md) for per-field provenance, every current
+14-entry catalog item, communication gaps and the dedicated address comparison.
 
-The communication baseline is Modbus RTU, slave 1, 9600 baud, 8 data bits, no parity,
-1 stop bit, and a 1 second timeout. Legacy MinimalModbus code used
+The historical-code communication baseline is Modbus RTU, slave 1, 9600 baud, 8 data bits,
+no parity, 1 stop bit, and a 1 second host timeout, not a confirmed current configuration.
+Legacy MinimalModbus code used
 `BYTEORDER_LITTLE` for 32-bit values, but byte and word order remain unverified for the
 target drive and firmware. No persistent register is written at startup or reconnection.
+
+The supplied parameter-list communication table (PDF pp. 36–37, printed 276–277) documents C0A.06 selectable
+word order: 0 low 16 bits first (default), 1 high 16 bits first. It does not establish the
+installed setting, byte-within-word order or a compatible wire protocol. Its default baud
+is 115200, while legacy code selected 9600. No exact model/firmware communication manual,
+read FC, area/base mapping or genuine raw capture is supplied. Gates B/C/D remain blocked;
+the [future commissioning design](read-only-commissioning.md) is not permission to read.
 
 ## Primitive and layout model
 
@@ -36,6 +47,11 @@ preserve the historical project map exactly. The codec neither derives an addres
 manual label nor adds or subtracts one. The target drive's zero-based/one-based runtime
 and future transport convention remains unresolved; any adapter offset belongs only in a
 future transport layer after verification.
+
+The existing metadata string "historical zero-based runtime address" is an unverified
+project assertion, not evidence of a zero-based PDU convention. No source metadata was
+changed in this documentation audit. Manual group/index identifiers and object-style
+homing notation must not be converted to RTU addresses without exact supporting evidence.
 
 ## Evidence and verification states
 
@@ -110,6 +126,12 @@ gearing, position-reference selection, planning configuration, displacements, DI
 assignment, and homing configuration are machine-defining or safety-relevant and require
 a future disabled-by-default engineering workflow. This milestone implements no such
 workflow and no register write.
+
+### Broader historical design table — not the executable catalog or a read allowlist
+
+The table below retains earlier design entries. Only the 14 entries audited in
+evidence-matrix.md exist in the current executable catalog. Numeric values here are not
+approved transport addresses, and documentary RW access does not authorize writes.
 
 | Symbol | Address | Type | Scale/access | Meaning |
 |---|---:|---|---|---|

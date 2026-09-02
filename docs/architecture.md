@@ -3,7 +3,10 @@
 ## System overview
 
 The system separates operator presentation, motion control, monitoring, drive behavior,
-and safety. Windows has no serial capability in the application architecture.
+and safety. Windows has no serial capability in the application architecture. The diagram
+below is the intended distributed architecture, not an installed hardware connection.
+Through Milestone 5, the only implemented application path is in-process simulation; the
+separate read boundary uses synthetic words. Milestone 5 adds documentation only.
 
 ```mermaid
 flowchart LR
@@ -61,7 +64,9 @@ The codec accepts and returns ordinary Python integers. It does not know about M
 functions, device offsets, serial ports, MinimalModbus, pyserial, the Pi, networking, or
 Qt. Catalog membership is documentary evidence, not permission to read or write a drive.
 Any future transport remains exclusively inside the Pi motion service and must supply an
-explicit, hardware-verified 32-bit byte/word layout.
+explicit layout verified for the exact hardware before claiming trusted 32-bit telemetry.
+Uninterpreted raw acquisition has a separate evidence and authorization gate; it must not
+silently select a hardware layout.
 
 ### Offline read-only boundary (Milestone 4)
 
@@ -85,6 +90,16 @@ The reader requires an explicit `OfflineFixtureInterpretation`, rejects unauthor
 reads before transport calls, and has no retry, polling, cache, thread, GUI, or motion
 authorization coupling. Snapshots are bounded single-pass reads, not atomic drive samples.
 Injected clocks supply acquisition times. No reader is connected to the existing GUI.
+
+### Evidence boundary (Milestone 5)
+
+The [evidence matrix](evidence-matrix.md) preserves documentary provenance separately from
+physical verification. [Readiness gates](hardware-readiness.md) distinguish tested offline
+code (A PASS), real raw acquisition (B BLOCKED), trusted typed telemetry (C BLOCKED) and
+motion (D BLOCKED). No raw response, fixture, manual default or successful connection can
+authorize servo enablement or motion. The [commissioning design](read-only-commissioning.md)
+defines future bounded, separately authorized observations only; there is no concrete
+adapter, serial/device discovery, hardware test or service implementation from this audit.
 
 ### Raspberry Pi motion service
 

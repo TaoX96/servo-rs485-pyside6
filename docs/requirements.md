@@ -1,6 +1,6 @@
 # Requirements
 
-## Milestone 4 scope
+## Current scope through Milestone 5
 
 Milestone 2 retains the Milestone 1 typed configuration, shared models, centralized state
 authorization, deterministic `FakeServo`, and idempotent in-process coordinator. It adds a
@@ -21,6 +21,17 @@ synthetic-word transport, immutable typed results, and partial snapshots. No rea
 writes, retry/polling loop, or GUI integration is added. Engineering inspection is disabled
 by default. Catalog areas remain unresolved and synthetic fixture overrides cannot grant
 hardware verification. Failures and ambiguous fields cannot become valid zero readings.
+
+Milestone 5 adds only evidence analysis and future commissioning documentation. No source,
+tests, dependencies, configuration, transport skeleton or deployment behavior changes.
+The [evidence matrix](evidence-matrix.md) separates series manuals, historical code,
+historical project documents, current design assertions and missing physical evidence.
+The [readiness gates](hardware-readiness.md) are A PASS, B/C/D BLOCKED. Real raw-read
+readiness must not be conflated with trusted telemetry or motion readiness. Actual FC,
+address convention, byte/word layout and installed settings must never be guessed from
+legacy constants, factory defaults or passing synthetic fixtures. All physical steps in
+the [commissioning design](read-only-commissioning.md) are future-only and separately
+authorized. Current safety level remains Simulation; Milestone 6 is not started.
 
 ## System responsibilities
 

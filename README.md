@@ -3,7 +3,7 @@
 This repository defines a distributed control and monitoring system for a knee-test rig.
 The intended operator interface is a PySide6 application on Windows, while a Raspberry Pi
 will own motion communication and monitoring services. The project is currently at
-**Milestone 4: offline read-only transport boundary**.
+**Milestone 5: hardware readiness and evidence audit**. Current safety level: **Simulation**.
 
 Milestone 2 adds a minimal PySide6 operator shell and a high-level motion-client boundary
 over the Milestone 1 deterministic simulation. It exercises state presentation, command
@@ -20,6 +20,14 @@ in-memory fake transport. Explicit immutable allowlists separate operational tel
 from disabled-by-default engineering inspection. One-shot snapshots preserve raw words,
 fixture-only validity, ambiguity, and per-field failures. All records are synthetic;
 no genuine raw drive captures are available or claimed.
+
+Milestone 5 adds documentation only: a source-specific evidence matrix, separate offline,
+raw-read, typed-telemetry and motion gates, and a future bounded read-only commissioning
+design. Gate A (offline) passes; Gates B (real raw reads), C (trusted physical telemetry)
+and D (motion) remain blocked. The exact installed identities and compatible communication
+manual are missing. Series C0A.06 word-order options do not verify the installed layout.
+No real transport or adapter skeleton was added, and no device or network was accessed.
+Milestone 6 is not started; its smallest proposed scope is offline evidence intake only.
 
 There is still no network client or server, Raspberry Pi service, monitoring service,
 Modbus driver, camera or temperature implementation, deployment unit, or executable real
@@ -132,6 +140,9 @@ servo-rs485-pyside6/
 - [Register map](docs/register-map.md)
 - [Deployment design](docs/deployment.md)
 - [Hardware inventory](docs/hardware-inventory.md)
+- [Evidence matrix and source limitations](docs/evidence-matrix.md)
+- [Hardware readiness and evidence requests](docs/hardware-readiness.md)
+- [Future read-only commissioning design](docs/read-only-commissioning.md)
 - [Future milestone prompts](docs/codex-prompts.md)
 
 Files under `docs/reference/` are evidence only. Do not edit, rename, move, or execute
