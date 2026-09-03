@@ -3,7 +3,7 @@
 This repository defines a distributed control and monitoring system for a knee-test rig.
 The intended operator interface is a PySide6 application on Windows, while a Raspberry Pi
 will own motion communication and monitoring services. The project is currently at
-**Milestone 5: hardware readiness and evidence audit**. Current safety level: **Simulation**.
+**Milestone 6: evidence intake and Gate B reassessment**. Current safety level: **Simulation**.
 
 Milestone 2 adds a minimal PySide6 operator shell and a high-level motion-client boundary
 over the Milestone 1 deterministic simulation. It exercises state presentation, command
@@ -27,7 +27,12 @@ design. Gate A (offline) passes; Gates B (real raw reads), C (trusted physical t
 and D (motion) remain blocked. The exact installed identities and compatible communication
 manual are missing. Series C0A.06 word-order options do not verify the installed layout.
 No real transport or adapter skeleton was added, and no device or network was accessed.
-Milestone 6 is not started; its smallest proposed scope is offline evidence intake only.
+Milestone 6 reviews five immutable local PDF excerpts. The A6-RS communication chapter
+supports FC03 and direct group/offset PDU addressing for documented C parameters, and the
+adapter manual documents its named product's isolation and automatic direction. Installed
+identity/firmware, U-monitor mapping, current settings/wiring and safe disabled/restraint
+evidence remain unresolved, so Gate B remains blocked and no first-read candidate is
+approved. Milestone 7 is not started.
 
 There is still no network client or server, Raspberry Pi service, monitoring service,
 Modbus driver, camera or temperature implementation, deployment unit, or executable real
@@ -141,6 +146,7 @@ servo-rs485-pyside6/
 - [Deployment design](docs/deployment.md)
 - [Hardware inventory](docs/hardware-inventory.md)
 - [Evidence matrix and source limitations](docs/evidence-matrix.md)
+- [New evidence intake manifest](docs/evidence/intake-manifest.md)
 - [Hardware readiness and evidence requests](docs/hardware-readiness.md)
 - [Future read-only commissioning design](docs/read-only-commissioning.md)
 - [Future milestone prompts](docs/codex-prompts.md)

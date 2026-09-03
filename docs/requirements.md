@@ -1,6 +1,6 @@
 # Requirements
 
-## Current scope through Milestone 5
+## Current scope through Milestone 6
 
 Milestone 2 retains the Milestone 1 typed configuration, shared models, centralized state
 authorization, deterministic `FakeServo`, and idempotent in-process coordinator. It adds a
@@ -31,7 +31,14 @@ readiness must not be conflated with trusted telemetry or motion readiness. Actu
 address convention, byte/word layout and installed settings must never be guessed from
 legacy constants, factory defaults or passing synthetic fixtures. All physical steps in
 the [commissioning design](read-only-commissioning.md) are future-only and separately
-authorized. Current safety level remains Simulation; Milestone 6 is not started.
+authorized. Current safety level remains Simulation.
+
+Milestone 6 inventories and audits five immutable local PDFs. It documents FC03 and direct
+group/offset addressing for A6-RS C parameters, protocol framing/CRC/byte representation,
+and the named Waveshare product's manual capabilities. It does not change code or grant
+physical applicability: installed identity/firmware, U mapping, settings/wiring and safe
+disabled/restraint evidence remain open. Gate A passes; Gates B, C and D remain blocked.
+No first physical read is approved and Milestone 7 is not started.
 
 ## System responsibilities
 

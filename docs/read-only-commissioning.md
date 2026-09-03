@@ -1,6 +1,6 @@
 # Future read-only commissioning design
 
-**Design only; not executed. Current safety level: Simulation.** Gate B and Gate C are
+**Design only; not executed. Current safety level: Simulation.** Gate B and Gate C remain
 blocked in [hardware-readiness.md](hardware-readiness.md). This document is not authority
 to implement a transport, discover devices, connect a Pi, open a port or read a drive.
 No executable commands, adapter skeleton or configuration enabling hardware are supplied.
@@ -19,9 +19,10 @@ accessible external display and safe disabled/restraint review; never change a p
 Qualified wiring review uses existing schematics or approved power-isolated inspection,
 not an energized enclosure. Obtain a safe energization/inhibition and load-restraint plan.
 
-Exit: reviewed Gate B evidence package, including selected harmless read or an explicitly
-bounded address-candidate plan. Missing identity, unsafe access or ambiguous protocol
-means stop; do not compensate with device scans or read-function guesses.
+Milestone 6 confirms A6-RS family FC03 and C-parameter group/offset construction. It does
+not confirm the installed model/firmware, U-monitor mapping, current settings or wiring.
+Exit still requires those items and a harmless read candidate. Do not compensate with
+device scans, FC04 guesses or extension of C rules to U labels.
 
 ## Phase 1 — Pi environment observation (future hardware-facing work)
 
@@ -35,7 +36,7 @@ observation. An absent/non-unique by-id identity blocks further work pending rev
 identity design; do not substitute a transient device name.
 
 Exit: exact host/adapter ownership record and explicit approval to proceed to offline
-implementation. Nothing is installed, enumerated or contacted in Milestone 5.
+implementation. Nothing is installed, enumerated or contacted in Milestone 6.
 
 ## Phase 2 — offline concrete-adapter implementation (future code milestone)
 
@@ -50,14 +51,16 @@ Test with in-memory fake serial bytes or a software-only loopback fixture, not a
 adapter. Prove all rejected/malformed/timeout paths fail closed and cannot send writes or
 trigger state transitions. Existing synthetic fixture validity cannot become hardware
 verification. Review offline test results and the physical-test checklist independently.
-No such adapter, skeleton, fixture expansion or dependency change is added by Milestone 5.
+No such adapter, skeleton, fixture expansion or dependency change is added by Milestone 6.
 
 ## Phase 3 — first authorized physical read (future hardware-facing work)
 
-Do not select the first register yet. A candidate must be an independently observable,
+No first register is approved by Milestone 6. A candidate must be an independently observable,
 harmless U16 status value supported by the exact manual's FC, area, address convention,
 read conditions and lack of read side effects. The historical `0x410A` constant alone
 does not qualify it; neither does membership in the current offline operational allowlist.
+N1 establishes FC03 and direct group/offset construction only for documented C-parameter
+examples. It does not explicitly establish U41.0A area/address/FC/read conditions.
 
 Before the test, record explicit authorization naming the exact device, register label,
 FC, address/base/area, count **one 16-bit word**, timeout, adapter/host, expected display
@@ -105,7 +108,8 @@ This is a separate future procedure if exact documentary mapping still needs a b
 verification, not an automatic fallback within the first-read test.
 
 1. Start from exact compatible manual evidence for a harmless, independently observable
-   U16 status label and known read FC. If the manual does not support safe candidates, stop.
+   U16 status label and known read FC. N1's C-address rule is insufficient for U41.0A.
+   If later evidence does not support a safe candidate, stop.
 2. Record a **maximum of two explicitly named evidence-derived candidates**, including the
    notation, proposed PDU address and why each is plausible. No formula or implicit
    plus/minus-one transformation is authorized by this document.
@@ -146,12 +150,13 @@ authority of this design. Do not write a convenient value or change electronic g
    consistent raw words and independent context. No moving-position-only verification.
 6. Record exact drive model/firmware, register, raw words, expected display value, all four
    outcomes and selected layout or unresolved result. Reviewer approval is required before
-   any future physical verification classification; none is granted by Milestone 5.
+   any future physical verification classification; none is granted by Milestone 6.
 
 Do not promote one register's layout globally without evidence that the drive applies it
 consistently to the relevant registers and settings. Record byte positions explicitly;
 MinimalModbus names and other documentation may define "little endian" differently.
-P's C0A.06 low-word-first default is not a verified active layout. The speed-width conflict
+The series C0A.06 low-word-first default is not a verified active layout. N1 establishes
+high-byte-first inside each 16-bit word, but active word order remains unknown. The speed-width conflict
 must be resolved separately; layout testing cannot resolve an unknown request width by guess.
 
 ## Stop conditions and rollback
@@ -195,4 +200,4 @@ access; do not record credentials, tokens or unnecessary full serial numbers.
 | Closure | Transport closed; no retry/write/motion; evidence retained; reviewer decision and separately authorized next step, if any |
 
 No genuine capture is currently available. This template and plan do not themselves supply
-evidence, confer hardware readiness or begin Milestone 6.
+evidence, confer hardware readiness or begin Milestone 7.

@@ -1,6 +1,6 @@
 # Raspberry Pi deployment design
 
-Deployment remains design-only through Milestone 5. The repository does not provide,
+Deployment remains design-only through Milestone 6. The repository does not provide,
 install, enable, or start any systemd unit.
 
 ## Planned services

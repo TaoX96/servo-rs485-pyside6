@@ -1,6 +1,6 @@
-# Milestone 5 evidence matrix
+# Evidence matrix through Milestone 6
 
-Audit date: 2026-09-02. Scope: local documentary analysis only. Current safety level:
+Latest audit: 2026-09-02. Scope: local documentary analysis only. Current safety level:
 **Simulation**. No device was inspected, enumerated, contacted, read, or written. No
 legacy code was imported or executed. Nothing here authorizes hardware access.
 
@@ -11,9 +11,10 @@ physical verification, and permission to operate are separate dimensions.
 
 | Level | Meaning |
 |---|---|
-| `PHYSICAL_DEVICE_VERIFIED` | Recorded observation of the identified installed device under an approved procedure. No claim receives this level in Milestone 5. |
+| `PHYSICAL_DEVICE_VERIFIED` | Recorded observation of the identified installed device under an approved procedure. No claim receives this level through Milestone 6. |
+| `USER_CONFIRMED` | Identity explicitly reported by the user without physical evidence inspected in this audit; not physical verification. |
 | `EXACT_MODEL_MANUAL_CONFIRMED` | Manufacturer statement matched to the exact target model and firmware applicability. No such match is currently established. |
-| `SERIES_MANUAL_CONFIRMED` | Statement present in the supplied A6-RS series excerpt; exact target applicability unconfirmed. |
+| `SERIES_MANUAL_CONFIRMED` | Statement in supplied manufacturer family/product documentation; exact installed target applicability unconfirmed. |
 | `MANUAL_AND_LEGACY_AGREE` | A specifically named field agrees between series documentation and historical code; not proof that the code ran successfully or that the device remains configured that way. |
 | `LEGACY_CODE_ONLY` | Historical source assertion or API argument, without matching manufacturer/capture evidence for that claim. |
 | `PROJECT_DOCUMENTATION_ONLY` | Historical report or current repository design assertion; the source must distinguish the two. |
@@ -26,7 +27,150 @@ The existing catalog enum `MANUAL_CONFIRMED` must be read as documentary, not ph
 confirmation. Its `AMBIGUOUS` state includes the speed-width conflict below. This audit
 does not change enums, metadata, allowlists, fixtures, or configuration.
 
-## Source inventory and provenance
+## Milestone 6 intake and controlling conclusions
+
+The immutable [intake manifest](evidence/intake-manifest.md) records five newly supplied
+PDF excerpts. This section supersedes Milestone 5 statements below that the communication
+chapter and adapter manual were missing; the older sections remain as an audit trail of
+what was known then. The new documents improve **manufacturer-document evidence**, not
+installed-device verification or permission to access hardware.
+
+| ID | Document title / revision / scope | Confirmed documentary facts | Remaining limitation / level |
+|---|---|---|---|
+| N1 | `A6-RS series servo drive manual`, Chapter 9 `Communication Description`, printed pp. 329-336; no displayed revision | Modbus RTU; FC03 for 16/32-bit parameter reads; group/offset C-address construction; high byte then low byte in each word; CRC16 0xA001 with CRC low byte first; >=3.5-character frame boundary; error frame CMD 0x90 and listed errors; 32-bit C0A.06 word ordering | A6-RS family scope; no installed model/firmware or current C0A.06 evidence. C examples only; no explicit U mapping, FC04, maximum read length, broadcast behavior, baud/framing settings, read side-effect statement or disabled-state permission. `SERIES_MANUAL_CONFIRMED` |
+| N2 | Same PDF title, Chapter 3 `Electrical Installation`, printed pp. 22-57; no displayed revision | A6-750RS is SIZE B/single-phase 200-240 VAC; CN3 pins 4/5/8 and CN4 pins 12/13/16 are RS485+/RS485-/GND; reference grounds are connected; qualified wiring and residual-voltage warnings | Generic series wiring, not the installed drive/cable; no physical inspection, termination state, firmware or safe-energization approval. `SERIES_MANUAL_CONFIRMED` |
+| N3 | Same PDF title, Chapter 1 `Product Information`, printed pp. 9-14; no displayed revision | A6-RS means pulse and 485; family models A6-200RS/400RS/750RS/1000RS and rated data; manual image illustrates an AS-400RS nameplate | Illustration is not installed evidence and is inconsistent in prefix with the A6 model table; installed model, serial, firmware and power remain unknown. `SERIES_MANUAL_CONFIRMED` / `CONFLICTING` illustration |
+| N4 | Same PDF title, Chapter 10 `Motor and Options`, printed pp. 337-351; no displayed revision | Model-code legend; A6M80-750H2B1-M17 brake version is 750 W, 220 V, 3000 rpm, 2.39 Nm, 17-bit absolute encoder; table pairs it with A6-750RS; brake table in N2 gives 24 VDC, 3.2 Nm holding, 8.5 W | Tables describe supported products, not the installed motor; no nameplate photograph or current brake/control evidence. `SERIES_MANUAL_CONFIRMED` |
+| N5 | Waveshare `USB TO RS232/485/TTL User Manual`, V1.3, 20181108 | FT232RL product; USB-B; A+/B-/GND screw terminals; documented power/signal isolation and automatic direction; Windows OS list; reserved 120-ohm termination pads | No installed-adapter label/revision photo, wiring, solder-pad state, biasing, VID/PID, unique serial or Linux/by-id guarantee. `SERIES_MANUAL_CONFIRMED` for the named product; installed identity remains `HARDWARE_VERIFICATION_REQUIRED` |
+
+### Manual applicability and device identity reassessment
+
+N1-N4 are coherent chapters of an A6-RS series manual and explicitly name A6-750RS and
+the candidate 750 W motor combination. They therefore cover the product family and those
+listed models. They do **not** identify the installed unit. The correct installed-device
+conclusion is **manual compatibility inferred but not proven**: no current drive/motor
+nameplate or firmware evidence was supplied. The user's milestone description says the
+intake covers exact identity, but it supplies no legible installed model value outside
+manual examples; that statement is retained as user context, not promoted to
+`PHYSICAL_DEVICE_VERIFIED` or `USER_CONFIRMED` exact model.
+
+The historical report's illustrated Waveshare product resembles N5, but there is still no
+current adapter label/photo. N5 confirms capabilities for its named product, not that the
+installed adapter is that revision or configured/wired accordingly. The Pi is
+`USER_CONFIRMED` as Raspberry Pi Zero 2 W, not physically verified; installed OS,
+architecture, power, USB identity and service configuration remain unknown. No optional
+web review was used.
+
+### Communication-manual audit
+
+| Topic | N1/N2 finding | Status / limitation |
+|---|---|---|
+| Protocol / physical interface | N1 sec. 9.1: Modbus RTU; N2 secs. 3.3/3.8: RS485+/RS485-/GND on CN3/CN4 | Family-manual confirmed; installed compatibility/wiring unverified |
+| Station | N1 request ADDR 1-247 | Conflicts with earlier parameter-table C0A.00 range 1-255; installed value unknown |
+| Baud, data bits, parity, stop bits | Not stated in N1; earlier C0A.01/.02 provides selector/default information but does not explicitly state data bits | Installed settings unknown; legacy 9600/8/N/1 remains historical, defaults remain defaults |
+| Frame/timing | Request and response fields; START/END >=3.5-character idle time | No absolute inter-frame time, host timeout or maximum request length stated; earlier C0A.03 response-delay selector is not installed evidence |
+| CRC | CRC16 polynomial 0xA001, initialized 0xffff; frame transmits CRC low byte then high | Family-manual confirmed; implementation still future work |
+| Read FC | FC03 explicitly for 16/32-bit parameters; FC04 is not listed | Confirmed for documented C-parameter examples only; no arbitrary substitution or FC04 fallback |
+| Response representation | Each 16-bit word is high byte then low byte; 32-bit order selected by C0A.06 | Byte-within-word is BIG. Active word order is unknown: setting 0 low-word-first, setting 1 high-word-first |
+| Exceptions | CMD 0x90 with 32-bit error value: 0001, 0002, 0003, 0004, 0006, 0008, 0020 | Preserve exact manual behavior; do not replace with generic Modbus exception assumptions |
+| Maximum read length / atomicity | Count is a 16-bit request field; a 32-bit parameter uses two words from its smaller offset | Field width is not a documented safe maximum. Coherence beyond a named 32-bit parameter is not established |
+| Broadcast behavior | Not stated | Unresolved; broadcast prohibited in future plan |
+| Read while disabled / side effects | Error 0x0020 means `Reading disabled`; no state-condition table or blanket no-side-effect statement | Blocker for first physical read until exact field conditions are supported |
+
+### Function-code determination by category
+
+| Category | FC / area / address / maximum | Applicability and remaining issue |
+|---|---|---|
+| C parameter reads | FC03; address bytes are C group and suffix offset; 32-bit named parameter count 2; maximum safe multi-read length unstated | Explicit A6-RS family evidence. Installed firmware and read conditions still unverified |
+| U monitor/status reads | Not separately documented in N1 | U labels are in the parameter-list manual, but extending N1's C-only mapping examples to U is not proven; FC and address area remain unresolved |
+| I/O-state reads | U40.04/.05 are read-only labels in the parameter list; N1 gives no category-specific mapping | FC/area/address unresolved; no read authorized |
+| Alarm reads | N3 says alarm tracing exists, but N1 supplies no alarm register/FC mapping | Unresolved; do not infer FC03/04 |
+
+### Address mapping and worked examples
+
+N1 explicitly defines C-register PDU bytes as the two hexadecimal components of the
+label: group in the high byte, suffix offset in the low byte. This is a direct 16-bit PDU
+address construction for the documented C examples, with no one-based register number and
+no `-1`/`+1` adjustment. It does not establish a human-facing 4xxxx number or MinimalModbus
+argument convention; library behavior must be verified offline before any adapter work.
+
+- C03.00 -> address bytes `03 00`, PDU value `0x0300`, FC03, count 1.
+- C03.02 -> address bytes `03 02`, PDU value `0x0302`, FC03, count 2 because it is U32.
+- C11.06 -> address bytes `11 06`, PDU value `0x1106`, FC03, count 2 because it is I32.
+
+These are manually worked applications of N1's rule plus the supplied parameter-table
+types; no request was sent. N1 itself gives C06.11 -> `06 11` and C05.07 -> `05 07`.
+Its separate `C11.12 (1st displacement)`/request `11 12` example conflicts with the
+parameter list, which calls C11.06 group 1 displacement and C11.12 group 2 speed. Treat
+that example as a blocking manual defect, not a catalog correction. No supported U example
+can be provided: U40.16 -> `0x4016` remains a historical/current-project hypothesis, not a
+confirmed mapping. Object-style homing notation also remains separate.
+
+### Installed communication settings
+
+| Setting | Current status |
+|---|---|
+| Station, baud, data bits, parity, stops | Historical code: 1, 9600, 8/N/1. Earlier series defaults/selectors: station 1, baud selector default 115200, no parity/one stop. No current display evidence: **Unknown installed values** |
+| Protocol selection | Product family and N1 document Modbus RTU; installed firmware/mode not observed |
+| C0A.06 word order | Options documented; current value unknown |
+| Response delay / host timeout | C0A.03 options/default and historical 1-second host timeout only; current values unknown |
+
+No setting is `Visible on current drive/keypad evidence` or physically verified. No
+parameter change is requested.
+
+### Register reassessment: all 14 current catalog entries
+
+Shared facts: C entries have documentary FC03/C-group mapping; U entries retain unresolved
+FC/area/mapping. No entry is physically verified or trusted-interpretation ready. Raw
+evidence-ready means the documentary fields needed to design a read are settled; it is
+not hardware authorization. All current code still says area `UNRESOLVED`; proposed
+metadata corrections must be a later reviewed code milestone.
+
+| Symbol | Label / address | Area, FC | Type / words / sign; unit/scale | Ordering | Manual page(s) / model applicability | Raw evidence-ready / blocker |
+|---|---|---|---|---|---|---|
+| POSITION_REFERENCE_SELECTION | C03.00 / 0x0300 | C parameter, 03 | U16/1/unsigned; - | word BIG | P 252; N1 329 mapping; A6-RS family | No: RW field lacks explicit no-side-effect/read-state evidence; installed firmware unknown |
+| GEAR_1_NUMERATOR | C03.02 / 0x0302 | C parameter, 03 | U32/2/unsigned; - | bytes BIG; C0A.06 active order unknown | P 252; N1 329,334-335; family | No: read conditions/installed applicability unknown; machine-defining engineering field |
+| GEAR_1_DENOMINATOR | C03.04 / 0x0304 | C parameter, 03 | U32/2/unsigned; - | same | P 252; N1 329,334-335; family | No: same blockers |
+| PLAN_MODE | C11.00 / 0x1100 | C parameter, 03 | U16/1/unsigned; - | word BIG | P 298; N1 329 mapping; family | No: RW motion configuration lacks explicit no-side-effect/read-state evidence |
+| GROUP_1_DISPLACEMENT | C11.06 / 0x1106 | C parameter, 03 | I32/2/signed; application unit/1 | bytes BIG; active word order unknown | P 298; N1 mapping; family; N1's C11.12 example conflicts | No: manual conflict/read conditions; not in either code allowlist |
+| SPEED_FEEDBACK | U40.01 / hypothesized 0x4001 | U monitor, unknown | I16/1/signed in table vs prose 32-bit; rpm/1 | unresolved | P 311/327; N1 lacks U mapping; family | No: width conflict plus FC/address unknown |
+| TORQUE_FEEDBACK | U40.03 / hypothesized 0x4003 | U monitor, unknown | I16/1/signed; % rated torque/0.1 | unresolved | P 312; N1 lacks U mapping; family | No: FC/address/read conditions unknown |
+| BUS_VOLTAGE | U40.06 / hypothesized 0x4006 | U monitor, unknown | U16/1/unsigned; V/0.1 | unresolved | P 312; N1 lacks U mapping; family | No: FC/address/read conditions unknown |
+| POSITION_DEVIATION | U40.10 / hypothesized 0x4010 | U monitor, unknown | I32/2/signed; encoder pulse/1 | word/byte application unresolved | P 312; N1 lacks U mapping; family | No: FC/address and active order unknown |
+| POSITION_FEEDBACK | U40.16 / hypothesized 0x4016 | U monitor, unknown | I32/2/signed; application unit/1 | same | P 312; N1 lacks U mapping; family | No: FC/address/order; application units are not degrees |
+| MOTOR_TEMPERATURE | U40.31 / hypothesized 0x4031 | U monitor, unknown | I16/1/signed; deg C/0.1 | unresolved | P 313; N1 lacks U mapping; family | No: FC/address/read conditions unknown |
+| ENCODER_TEMPERATURE | U40.32 / hypothesized 0x4032 | U monitor, unknown | I16/1/signed; deg C/0.1 | unresolved | P 313; N1 lacks U mapping; family | No: FC/address/read conditions unknown |
+| PLAN_OPERATION_GROUP | U41.08 / hypothesized 0x4108 | U status, unknown | U16/1/unsigned; - | unresolved | P 315; N1 lacks U mapping; family | No: FC/address/read conditions unknown |
+| SERVO_STATUS | U41.0A / hypothesized 0x410A | U status, unknown | U16/1/unsigned; raw states | unresolved | P 315; N1 lacks U mapping; family | No: otherwise attractive candidate, but exact FC/area/address/no-side-effect conditions unresolved |
+
+Unknown active word order prevents trusted 32-bit interpretation, not retention of an
+otherwise approved two-word raw read. Raw-read blockers in this table are identity,
+mapping, width, access/read conditions and authorization, not calibration or layout alone.
+
+### Proposed later catalog review (no code changes now)
+
+Retain all four generic offline codec layouts. A later reviewed metadata change can attach
+N1's C-parameter address/FC/high-byte-first documentary evidence without claiming installed
+verification. Correct the blanket `historical zero-based runtime address` wording for U
+entries, whose mapping remains unsupported. Do not change U numeric values or resolve speed
+width by inference. Keep the displacement discrepancy blocking until manufacturer evidence
+clarifies it. No production catalog entry was silently corrected in Milestone 6.
+
+### Additional documentary discrepancies
+
+- N1 pp. 6-7 (334-335) calls C11.12 the first displacement, while its later write example
+  uses address bytes 11 0C; P p. 58 (298) identifies C11.06 as group 1 displacement. None
+  of these conflicting examples establishes a replacement address for the current catalog.
+- N3 p. 1 (9) advertises a 17-bit encoder, while p. 5 (13) lists 23/26-bit feedback.
+  Exact installed encoder compatibility remains unresolved; do not merge those claims.
+- N4 p. 10 (346) has a 750 W table but labels its brake-dimension illustration with a
+  400 W motor model. Ratings-table evidence is not authority to use that drawing for assembly.
+- N2's CN3/CN4 table labels GND but gives it the description `Data receive-`; preserve the
+  pin label and require qualified matched-pinout review rather than reinterpret its function.
+- N1's slave-address range, N2's node count and N5's node recommendation are different
+  quantities. None proves the installed station, bus loading or current cable topology.
+
+## Milestone 5 source inventory and provenance (historical baseline)
 
 Page numbers below are one-based PDF pages; printed page numbers are given in parentheses.
 Links refer only to supplied local files. Bibliographic web links were not visited.
@@ -44,10 +188,11 @@ Links refer only to supplied local files. Bibliographic web links were not visit
 
 There are seven protected files: two Python, four PDF, one Markdown. R0 names older
 `(1)` variants, `Tao_Xiong_Thesis.pdf` and a LabVIEW VI that are not present under those
-names. No full/model-specific A6-RS communication manual or motor datasheet is supplied.
+names. At Milestone 5, no communication chapter or motor tables were supplied; the
+Milestone 6 intake above now adds series-level chapters but not installed-device evidence.
 The originals and their recorded seven-file SHA-256 baseline remain unchanged.
 
-## Hardware identity evidence
+## Milestone 5 hardware identity evidence (historical baseline)
 
 For each row, the last column distinguishes blockers: **B** = real raw-read gate,
 **C** = trusted interpretation gate, **D** = motion gate. `D only` does not waive Gate B's
@@ -126,7 +271,7 @@ policy requires them; D p. 12 is a hazard narrative, not a qualified as-built re
 | Safe stopping distance | No validated speed/load/stop envelope | Not needed for no-motion raw read with approved restraint | D |
 | Qualified electrical review | No signed inspection or safe energization record supplied | B | D |
 
-## Communication evidence
+## Milestone 5 communication evidence (superseded where stated above)
 
 `B`/`C` below refer to the [separate readiness gates](hardware-readiness.md). No factory
 default is an observed active setting. No Modbus standard or library behavior is filled
@@ -158,7 +303,7 @@ with C0A.00–06; P p. 85 (325) discusses C0A.09/.0A, not missing Modbus framing
 | Read side effects | Monitor tables say read only; no complete access/side-effect specification | RO does not alone prove a harmless protocol transaction; exact first-read safety review required for B |
 | Stopped/disabled requirements for parameter reads | P's modification-mode column describes writes, not read permission; `MISSING` read restrictions | Verify exact read conditions. Proposed physical reads require disabled servo regardless; B for selected field |
 
-## Address-notation comparison
+## Milestone 5 address-notation comparison (superseded for C parameters only)
 
 | Notation | What is actually documented | Mapping / base status |
 |---|---|---|
@@ -179,7 +324,7 @@ established base convention. The catalog cautions and `UNRESOLVED` area remain c
 Milestone 5 changes no source code and approves no offset. Formula generation, automatic
 `-1`/`+1` fallback, group arithmetic and address scanning are prohibited.
 
-## Register evidence matrix: all 14 current catalog entries
+## Milestone 5 register evidence matrix (superseded by the Milestone 6 table above)
 
 Two joined tables avoid hiding provenance in a very wide table. Symbols identify the same
 entry in both tables. Types, word counts and scales below are current documentary codec
@@ -267,8 +412,9 @@ fields or store credentials.
 - D's proposed unattended endurance use (p. 14) is superseded by the current prohibition
   on unattended real-hardware tests. D's Windows-owned RS485 diagram is historical only;
   future ownership belongs exclusively to the Pi motion service.
-- Exact drive/motor/adapter identity, firmware compatibility, full communication manual,
-  as-built wiring/safety review and genuine captures are missing. Historical datasheet
+- Exact installed drive/motor/adapter identity, firmware compatibility, complete U-area
+  mapping, as-built wiring/safety review and genuine captures are missing. New series
+  manual chapters and historical datasheet
   links, R0's absent files and generic board pinouts do not close those gaps.
 - Calibration, HSW/PL/NL installation, homing, direction, limits, brake and load-holding
   behavior remain unverified. Read-only success could not resolve or authorize motion.

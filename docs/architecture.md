@@ -5,8 +5,8 @@
 The system separates operator presentation, motion control, monitoring, drive behavior,
 and safety. Windows has no serial capability in the application architecture. The diagram
 below is the intended distributed architecture, not an installed hardware connection.
-Through Milestone 5, the only implemented application path is in-process simulation; the
-separate read boundary uses synthetic words. Milestone 5 adds documentation only.
+Through Milestone 6, the only implemented application path is in-process simulation; the
+separate read boundary uses synthetic words. Milestone 6 adds evidence documentation only.
 
 ```mermaid
 flowchart LR
@@ -100,6 +100,13 @@ motion (D BLOCKED). No raw response, fixture, manual default or successful conne
 authorize servo enablement or motion. The [commissioning design](read-only-commissioning.md)
 defines future bounded, separately authorized observations only; there is no concrete
 adapter, serial/device discovery, hardware test or service implementation from this audit.
+
+Milestone 6 adds A6-RS family evidence for FC03, C-parameter group/offset addressing,
+high-byte-first 16-bit words, CRC framing and selectable 32-bit word order. Those facts do
+not change the runtime boundary: source metadata remains `UNRESOLVED`, U-monitor mapping
+and installed C0A.06 remain unknown, and Gate B is still blocked. The Waveshare manual
+documents the named product, not the installed adapter or wiring. No real transport,
+network/serial ownership, discovery or hardware access was added.
 
 ### Raspberry Pi motion service
 

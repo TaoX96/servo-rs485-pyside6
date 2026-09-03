@@ -1,7 +1,7 @@
 # Suggested prompts for future milestones
 
-Give Codex one explicitly approved milestone at a time. Milestone 5 audits hardware
-readiness; it does not authorize real transport, hardware access, or Milestone 6.
+Give Codex one explicitly approved milestone at a time. Milestone 6 audits supplied local
+evidence; it does not authorize real transport, hardware access, or Milestone 7.
 
 ## Completed Milestone 1 - contracts and simulation
 
@@ -39,14 +39,19 @@ absence. Gate A passes; B/C/D remain blocked. See [evidence](evidence-matrix.md)
 No code, tests, dependencies or configuration changed; no real adapter/skeleton, device
 enumeration, hardware access or new physical verification was introduced.
 
-## Proposed Milestone 6 - offline evidence intake only (not started)
+## Completed Milestone 6 - evidence intake and Gate B reassessment
 
-Review user-supplied redacted drive/motor/adapter labels, the exact compatible communication
-manual and existing wiring/settings/safety records. Update the evidence matrix and
-reassess Gate B; do not implement an adapter, discover devices, connect hardware, change
-settings or execute a read. Keep unresolved evidence blocked rather than inferring FC,
-offset or layout. Any later implementation and any physical test need separate explicit
-authorization. Do not begin this proposal without user approval.
+Five immutable local PDFs were manifested and reviewed. The A6-RS chapter documents FC03
+and direct group/offset PDU addressing for C parameters; U-monitor mapping and installed
+identity/settings/wiring remain unresolved. Gate B remains blocked and no first read is
+approved. No code, device or network access was introduced.
+
+## Proposed Milestone 7 - remaining Gate B evidence closure (not started)
+
+Review only installed nameplate/firmware, adapter/as-built wiring, current communication
+settings/safe disabled-restraint record and applicable U-monitor mapping. Reassess U41.0A
+without implementing an adapter or accessing hardware. Do not begin without explicit user
+authorization.
 
 ## Later commissioning milestones
 
