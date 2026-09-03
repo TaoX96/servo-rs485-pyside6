@@ -10,6 +10,7 @@ from typing import Final
 from knee_rig.motion.driver.codec import PrimitiveType
 from knee_rig.motion.driver.register_spec import (
     AccessClass,
+    RegisterArea,
     RegisterSpec,
     SafetyClass,
     VerificationStatus,
@@ -41,6 +42,9 @@ def _spec(
     engineering: bool = False,
     verification: VerificationStatus = VerificationStatus.HARDWARE_VERIFICATION_REQUIRED,
     caution: str = _ADDRESS_CAUTION,
+    area: RegisterArea = RegisterArea.UNRESOLVED,
+    address_notation: str = "historical zero-based runtime address; no offset applied",
+    evidence_source: str = _MANUAL,
 ) -> RegisterSpec:
     return RegisterSpec(
         name=name,
@@ -55,8 +59,10 @@ def _spec(
         ordinary_operator_use=ordinary_operator_use,
         engineering_authorization_required=engineering,
         verification=verification,
-        evidence_source=_MANUAL,
+        evidence_source=evidence_source,
         caution=caution,
+        area=area,
+        address_notation=address_notation,
     )
 
 
@@ -139,6 +145,22 @@ _SPECS = (
         + " Manual table says I16 while nearby prose describes 32-bit; width remains ambiguous.",
     ),
     _spec(
+        "DI_STATUS",
+        "U40.04",
+        0x4004,
+        PrimitiveType.U16,
+        AccessClass.READ_ONLY,
+        None,
+        None,
+        SafetyClass.STATUS,
+        ordinary_operator_use=True,
+        verification=VerificationStatus.MANUAL_CONFIRMED,
+        area=RegisterArea.MODBUS_PARAMETER_FC03,
+        address_notation="manual group/offset PDU address; no offset applied",
+        evidence_source="A6-RS parameter-list pp. 312/327 and communication pp. 329-330",
+        caution="Raw DI1-DI8 levels only; installed PL/NL assignment and polarity are unverified.",
+    ),
+    _spec(
         "TORQUE_FEEDBACK",
         "U40.03",
         0x4003,
@@ -217,6 +239,11 @@ _SPECS = (
         None,
         SafetyClass.STATUS,
         ordinary_operator_use=True,
+        verification=VerificationStatus.MANUAL_CONFIRMED,
+        area=RegisterArea.MODBUS_PARAMETER_FC03,
+        address_notation="manual group/offset PDU address; no offset applied",
+        evidence_source="A6-RS parameter-list p. 315 and communication pp. 329-330",
+        caution="Read-only U16 mapping is documented; installed firmware remains unverified.",
     ),
     _spec(
         "SERVO_STATUS",
@@ -228,6 +255,13 @@ _SPECS = (
         None,
         SafetyClass.STATUS,
         ordinary_operator_use=True,
+        verification=VerificationStatus.MANUAL_CONFIRMED,
+        area=RegisterArea.MODBUS_PARAMETER_FC03,
+        address_notation="manual group/offset PDU address; no offset applied",
+        evidence_source="A6-RS parameter-list p. 315 and communication pp. 329-330",
+        caution=(
+            "Raw states 0-3 are documented; status does not prove STO, restraint, or safe torque state."
+        ),
     ),
 )
 

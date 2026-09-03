@@ -1,6 +1,7 @@
 # Hardware inventory
 
-Milestone 6 is documentary only. **No installed item is physically verified.** This summary
+Milestone 7 prepares a controlled read-only session. **No installed item is physically
+verified yet.** This summary
 does not turn historical procurement/design statements into installed values. Detailed
 per-item provenance, confidence limits, verification actions and raw-read versus motion
 blockers are in the [evidence matrix](evidence-matrix.md#hardware-identity-evidence).
@@ -16,7 +17,7 @@ blockers are in the [evidence matrix](evidence-matrix.md#hardware-identity-evide
 | Camera / temperature | HQ camera and DS18B20 intended; historical code uses camera and 1-Wire APIs | Installed sensor identity/wiring; separate monitoring scope |
 | E-stop / STO or enable / contactor | Required by current safety design; installed implementation unknown | Exact capabilities, schematic, safe disabled-state/energization review |
 | PL / NL | Required independent travel protection | Switch identity, placement, active levels and verified wiring |
-| HSW | Required for selected future homing workflow | Switch type, placement, active level and homing compatibility |
+| HSW | Deferred; not required by selected PL-reference strategy | Reassess only if later index or independent-home refinement is requested |
 | Switch electrical behavior / DI common | Unknown | NO/NC, PNP/NPN/dry-contact truth table and qualified wiring review |
 | Encoder Z-phase | Unknown | Exact encoder/drive capability and homing-mode applicability |
 | Gravity / brake / holding | Historical counterweight calculations only | Approved restraint and torque-loss behavior; no assumed self-locking |
@@ -30,7 +31,10 @@ paths in this shared file. Until the inventory and safety evidence are complete,
 project remains simulation or documentation only and real enable, homing, and motion are
 prohibited.
 
-See [readiness gates and prioritized evidence requests](hardware-readiness.md): A PASS,
-B/C/D BLOCKED. Current safety level remains **Simulation**. A6-RS family communication
-documentation is available; installed applicability, U-area mapping and genuine raw
-Modbus captures remain unavailable.
+Historical successful LabVIEW control supports prior operation of the drive and RS485
+method, but it does not verify current Pi identity, path, wiring, settings, or state.
+
+See [readiness gates](hardware-readiness.md): A passes, B is prepared conditionally for
+the first supervised session, and C/D remain blocked. Current safety level is
+**Controlled read-only commissioning preparation**. No genuine Raspberry Pi raw Modbus
+capture is available yet.

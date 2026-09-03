@@ -15,6 +15,23 @@ position_units_per_joint_degree = 0.0
 joint_zero_offset_deg = 0.0
 direction_sign = 0
 
+[homing]
+# Selected design only. Zero values keep real homing non-operational.
+strategy = "POSITIVE_LIMIT_REFERENCE"
+search_direction = 1
+search_speed_units_per_tick = 0.0
+backoff_speed_units_per_tick = 0.0
+search_distance_units = 0.0
+backoff_distance_units = 0.0
+home_offset_units = 0.0
+search_timeout_ticks = 0
+backoff_timeout_ticks = 0
+# The family manual documents mode 18; installed model/firmware applicability is unverified.
+drive_internal_mode = 18
+pl_polarity_verified = false
+nl_polarity_verified = false
+installed_drive_internal_mode_verified = false
+
 [limits]
 # Zero values are deliberately unconfigured; they are not usable operating limits.
 min_joint_angle_deg = 0.0
@@ -31,4 +48,3 @@ max_torque_percent = 0.0
 [logging]
 level = "INFO"
 directory = ""
-

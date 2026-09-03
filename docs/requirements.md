@@ -1,6 +1,6 @@
 # Requirements
 
-## Current scope through Milestone 6
+## Current scope through Milestone 7
 
 Milestone 2 retains the Milestone 1 typed configuration, shared models, centralized state
 authorization, deterministic `FakeServo`, and idempotent in-process coordinator. It adds a
@@ -33,12 +33,20 @@ legacy constants, factory defaults or passing synthetic fixtures. All physical s
 the [commissioning design](read-only-commissioning.md) are future-only and separately
 authorized. Current safety level remains Simulation.
 
-Milestone 6 inventories and audits five immutable local PDFs. It documents FC03 and direct
-group/offset addressing for A6-RS C parameters, protocol framing/CRC/byte representation,
-and the named Waveshare product's manual capabilities. It does not change code or grant
-physical applicability: installed identity/firmware, U mapping, settings/wiring and safe
-disabled/restraint evidence remain open. Gate A passes; Gates B, C and D remain blocked.
-No first physical read is approved and Milestone 7 is not started.
+Milestone 6 inventories and audits five immutable local PDFs. Milestone 7 adds a Pi-only,
+one-request diagnostic for the documented read-only U16 parameters `U41.0A`, `U41.08`,
+and `U40.04`. It accepts symbols only, requires an exact `/dev/serial/by-id/...` local
+path and explicit arm flag, captures raw RTU frames and timing, makes no retries, and
+always closes the port. A separate validation command opens no device. It is not called
+by GUI or service startup.
+
+Milestone 7 also selects `POSITIVE_LIMIT_REFERENCE` for simulation and future design.
+PL is the initial reference and positive travel limit; NL remains independent. Simulated
+homing searches positive, confirms a controlled stop at PL, backs off until PL clears,
+applies a negative offset, verifies stable completion, and only then enters `HOMED`.
+Drive-internal mode 18 has family-manual support, while installed applicability, polarity,
+speeds, distances, offset, and timeouts stay unverified and disabled. Current safety level
+is Controlled read-only commissioning preparation; no motion or write is authorized.
 
 ## System responsibilities
 
@@ -97,7 +105,8 @@ requires explicit recovery. It does not automatically issue Servo Off.
 - Exact A6-RS drive model, motor model, and firmware.
 - Verified 16/32-bit data widths and 32-bit byte/word order.
 - Joint-angle calibration, gearbox ratio, zero reference, and mechanical direction.
-- Installed and verified E-stop, STO or Servo Enable path, PL, NL, and HSW wiring.
+- Installed and verified E-stop, STO or Servo Enable path, PL and NL wiring, assignments,
+  and polarity. Independent HSW and encoder-index refinement are deferred.
 - Safe controlled-stop behavior and whether Servo Off can release the mechanism.
 - Approved angle, speed, acceleration, deceleration, torque, temperature, and cycle limits.
 - Authentication, transport security, network topology, and deployment addresses.

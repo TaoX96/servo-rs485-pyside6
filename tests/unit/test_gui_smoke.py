@@ -51,7 +51,9 @@ def test_window_creation_safe_state_and_core_controls(qtbot: QtBot) -> None:
         "command_reset_fault",
         "inject_communication_loss",
         "inject_drive_fault",
-        "inject_hsw_not_found",
+        "inject_pl_never_found",
+        "inject_pl_stuck_active",
+        "inject_backoff_timeout",
         "inject_homing_timeout",
         "inject_pl_active",
         "inject_nl_active",
@@ -76,7 +78,7 @@ def test_rejected_then_authorized_command_flow_and_validation(qtbot: QtBot) -> N
     assert client.state().servo is ServoState.SERVO_ENABLED
 
     window.findChild(QPushButton, "command_home").click()
-    client.advance(3)
+    client.advance(20)
     window.refresh_view()
     assert client.state().homing is HomingState.HOMED
 
@@ -104,7 +106,7 @@ def test_close_during_motion_stops_timer_and_requires_recovery(qtbot: QtBot) -> 
     window.findChild(QPushButton, "acquireLeaseButton").click()
     window.findChild(QPushButton, "command_enable_servo").click()
     window.findChild(QPushButton, "command_home").click()
-    client.advance(3)
+    client.advance(20)
     window.refresh_view()
     window.findChild(QPushButton, "command_start_single_move").click()
     client.advance(1)

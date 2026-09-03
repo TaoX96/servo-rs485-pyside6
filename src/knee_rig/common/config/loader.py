@@ -14,6 +14,7 @@ from knee_rig.common.config.models import (
     CalibrationConfig,
     FeatureConfig,
     GuiConfig,
+    HomingConfig,
     LimitsConfig,
     LoggingConfig,
     MonitoringApiConfig,
@@ -23,6 +24,7 @@ from knee_rig.common.config.models import (
     SerialConfig,
     default_config,
 )
+from knee_rig.common.models import HomingStrategy
 
 
 @dataclass(frozen=True, slots=True)
@@ -155,6 +157,19 @@ def _float(data: Mapping[str, object], key: str, path: str) -> float:
     return float(cast(int | float, value))
 
 
+def _homing_strategy(data: Mapping[str, object], key: str, path: str) -> HomingStrategy:
+    raw = data[key]
+    if isinstance(raw, HomingStrategy):
+        return raw
+    value = _str(data, key, path)
+    try:
+        return HomingStrategy(value)
+    except ValueError as exc:
+        raise ConfigValidationError(
+            [ValidationIssue("INVALID_HOMING_STRATEGY", path, "unsupported homing strategy")]
+        ) from exc
+
+
 def _build_config(data: Mapping[str, object]) -> AppConfig:
     features = _section(data, "features")
     calibration = _section(data, "calibration")
@@ -162,6 +177,7 @@ def _build_config(data: Mapping[str, object]) -> AppConfig:
     logging = _section(data, "logging")
     motion_service = _section(data, "motion_service")
     serial = _section(data, "serial")
+    homing = _section(data, "homing")
     monitoring_service = _section(data, "monitoring_service")
     motion_api = _section(data, "motion_api")
     monitoring_api = _section(data, "monitoring_api")
@@ -239,6 +255,45 @@ def _build_config(data: Mapping[str, object]) -> AppConfig:
                 "legacy_byteorder_hypothesis",
                 "serial.legacy_byteorder_hypothesis",
             ),
+            pl_input_number=_int(serial, "pl_input_number", "serial.pl_input_number"),
+            nl_input_number=_int(serial, "nl_input_number", "serial.nl_input_number"),
+            pl_active_level=_str(serial, "pl_active_level", "serial.pl_active_level"),
+            nl_active_level=_str(serial, "nl_active_level", "serial.nl_active_level"),
+        ),
+        homing=HomingConfig(
+            strategy=_homing_strategy(homing, "strategy", "homing.strategy"),
+            search_direction=_int(homing, "search_direction", "homing.search_direction"),
+            search_speed_units_per_tick=_float(
+                homing, "search_speed_units_per_tick", "homing.search_speed_units_per_tick"
+            ),
+            backoff_speed_units_per_tick=_float(
+                homing, "backoff_speed_units_per_tick", "homing.backoff_speed_units_per_tick"
+            ),
+            search_distance_units=_float(
+                homing, "search_distance_units", "homing.search_distance_units"
+            ),
+            backoff_distance_units=_float(
+                homing, "backoff_distance_units", "homing.backoff_distance_units"
+            ),
+            home_offset_units=_float(homing, "home_offset_units", "homing.home_offset_units"),
+            search_timeout_ticks=_int(
+                homing, "search_timeout_ticks", "homing.search_timeout_ticks"
+            ),
+            backoff_timeout_ticks=_int(
+                homing, "backoff_timeout_ticks", "homing.backoff_timeout_ticks"
+            ),
+            drive_internal_mode=_int(homing, "drive_internal_mode", "homing.drive_internal_mode"),
+            pl_polarity_verified=_bool(
+                homing, "pl_polarity_verified", "homing.pl_polarity_verified"
+            ),
+            nl_polarity_verified=_bool(
+                homing, "nl_polarity_verified", "homing.nl_polarity_verified"
+            ),
+            installed_drive_internal_mode_verified=_bool(
+                homing,
+                "installed_drive_internal_mode_verified",
+                "homing.installed_drive_internal_mode_verified",
+            ),
         ),
         monitoring_service=MonitoringServiceConfig(
             bind_host=_str(monitoring_service, "bind_host", "monitoring_service.bind_host"),
@@ -296,6 +351,7 @@ def _validate_config(config: AppConfig) -> None:
     features = config.features
     calibration = config.calibration
     limits = config.limits
+    homing = config.homing
 
     numeric_values = {
         "calibration.position_units_per_joint_degree": calibration.position_units_per_joint_degree,
@@ -307,6 +363,11 @@ def _validate_config(config: AppConfig) -> None:
         "limits.max_torque_percent": limits.max_torque_percent,
         "motion_service.control_lease_ttl_s": config.motion_service.control_lease_ttl_s,
         "serial.timeout_s": config.serial.timeout_s,
+        "homing.search_speed_units_per_tick": homing.search_speed_units_per_tick,
+        "homing.backoff_speed_units_per_tick": homing.backoff_speed_units_per_tick,
+        "homing.search_distance_units": homing.search_distance_units,
+        "homing.backoff_distance_units": homing.backoff_distance_units,
+        "homing.home_offset_units": homing.home_offset_units,
         "motion_api.request_timeout_s": config.motion_api.request_timeout_s,
         "motion_api.lease_renewal_interval_s": config.motion_api.lease_renewal_interval_s,
         "monitoring_api.request_timeout_s": config.monitoring_api.request_timeout_s,
@@ -321,7 +382,7 @@ def _validate_config(config: AppConfig) -> None:
             ValidationIssue(
                 "PERSISTENT_WRITES_UNAVAILABLE",
                 "features.allow_persistent_parameter_write",
-                "Milestone 1 cannot authorize persistent writes",
+                "Persistent writes are unavailable in the current milestone",
             )
         )
     if features.allow_motion and not features.allow_servo_enable:
@@ -358,6 +419,93 @@ def _validate_config(config: AppConfig) -> None:
                 )
             )
 
+    if not 0 <= config.serial.pl_input_number <= 8:
+        issues.append(
+            ValidationIssue(
+                "OUT_OF_RANGE", "serial.pl_input_number", "must be 0 or DI1 through DI8"
+            )
+        )
+    if not 0 <= config.serial.nl_input_number <= 8:
+        issues.append(
+            ValidationIssue(
+                "OUT_OF_RANGE", "serial.nl_input_number", "must be 0 or DI1 through DI8"
+            )
+        )
+    if (
+        config.serial.pl_input_number != 0
+        and config.serial.pl_input_number == config.serial.nl_input_number
+    ):
+        issues.append(
+            ValidationIssue(
+                "INVALID_LIMIT_MAPPING",
+                "serial",
+                "PL and NL cannot use the same digital input",
+            )
+        )
+    for path, value in {
+        "serial.pl_active_level": config.serial.pl_active_level,
+        "serial.nl_active_level": config.serial.nl_active_level,
+    }.items():
+        if value not in {"unverified", "high", "low"}:
+            issues.append(
+                ValidationIssue("INVALID_ACTIVE_LEVEL", path, "must be unverified, high, or low")
+            )
+
+    if features.allow_homing:
+        positive_values: Mapping[str, float | int] = {
+            "homing.search_speed_units_per_tick": homing.search_speed_units_per_tick,
+            "homing.backoff_speed_units_per_tick": homing.backoff_speed_units_per_tick,
+            "homing.search_distance_units": homing.search_distance_units,
+            "homing.backoff_distance_units": homing.backoff_distance_units,
+            "homing.search_timeout_ticks": homing.search_timeout_ticks,
+            "homing.backoff_timeout_ticks": homing.backoff_timeout_ticks,
+        }
+        for homing_path, homing_value in positive_values.items():
+            if homing_value <= 0:
+                issues.append(
+                    ValidationIssue(
+                        "HOMING_PARAMETER_UNCONFIGURED",
+                        homing_path,
+                        "must be greater than zero",
+                    )
+                )
+        if homing.strategy is not HomingStrategy.POSITIVE_LIMIT_REFERENCE:
+            issues.append(
+                ValidationIssue(
+                    "INVALID_HOMING_STRATEGY",
+                    "homing.strategy",
+                    "the selected strategy is POSITIVE_LIMIT_REFERENCE",
+                )
+            )
+        if homing.search_direction != 1:
+            issues.append(
+                ValidationIssue(
+                    "WRONG_HOMING_DIRECTION",
+                    "homing.search_direction",
+                    "positive-limit search direction must be +1",
+                )
+            )
+        if homing.home_offset_units >= 0:
+            issues.append(
+                ValidationIssue(
+                    "WRONG_HOME_OFFSET_DIRECTION",
+                    "homing.home_offset_units",
+                    "positive-limit home offset must be non-zero in the negative direction",
+                )
+            )
+        if not features.simulation and not (
+            homing.pl_polarity_verified
+            and homing.nl_polarity_verified
+            and homing.installed_drive_internal_mode_verified
+            and homing.drive_internal_mode == 18
+        ):
+            issues.append(
+                ValidationIssue(
+                    "HOMING_VERIFICATION_REQUIRED",
+                    "homing",
+                    "future real homing requires verified PL/NL polarity and installed mode 18",
+                )
+            )
     if (
         limits.min_joint_angle_deg != 0.0 or limits.max_joint_angle_deg != 0.0
     ) and limits.min_joint_angle_deg >= limits.max_joint_angle_deg:
@@ -404,7 +552,8 @@ def _validate_config(config: AppConfig) -> None:
             ValidationIssue(
                 "REAL_HARDWARE_UNAVAILABLE",
                 "features.simulation",
-                "Milestone 1 supports simulation only",
+                "The application configuration supports simulation only; use the isolated "
+                "one-shot diagnostic for an authorized read-only session",
             )
         )
 

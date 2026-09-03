@@ -137,6 +137,7 @@ def test_all_default_fields_preserve_synthetic_records_and_speed_ambiguity() -> 
         ("POSITION_FEEDBACK", 0x4016, (0xFEDC, 0xBA99)),
         ("SPEED_FEEDBACK", 0x4001, (0xFFFE,)),
         ("TORQUE_FEEDBACK", 0x4003, (0xFF85,)),
+        ("DI_STATUS", 0x4004, (0x00FE,)),
         ("BUS_VOLTAGE", 0x4006, (2300,)),
         ("POSITION_DEVIATION", 0x4010, (0, 7)),
         ("MOTOR_TEMPERATURE", 0x4031, (253,)),
@@ -158,7 +159,7 @@ def test_all_default_fields_preserve_synthetic_records_and_speed_ambiguity() -> 
     snapshot = reader.snapshot()
     assert tuple(field.symbol for field in snapshot.fields) == DEFAULT_SNAPSHOT
     assert snapshot.validity is ReadValidity.DEGRADED
-    assert len(transport.history) == 9
+    assert len(transport.history) == 10
     expected_words = {symbol: words for symbol, _, words in rows}
     for field in snapshot.fields:
         assert field.failure is None

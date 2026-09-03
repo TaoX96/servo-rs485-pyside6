@@ -39,6 +39,8 @@ class MainView:
     connection: str
     servo: str
     homing: str
+    homing_reference: str
+    homing_phase: str
     motion: str
     lease: str
     motion_permitted: str
@@ -75,6 +77,8 @@ def present(
         connection=_state_text(state.connection, ConnectionState.CONNECTED),
         servo=_state_text(state.servo, ServoState.SERVO_ENABLED),
         homing=_state_text(state.homing, HomingState.HOMED),
+        homing_reference="PL (positive travel limit; HSW and encoder index deferred)",
+        homing_phase=state.homing_phase.value,
         motion=_motion_text(state.motion),
         lease=(
             f"[ACTIVE] {lease.expires_in_s:.0f} s remaining"

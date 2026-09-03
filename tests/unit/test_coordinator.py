@@ -41,12 +41,12 @@ class CoordinatorTests(unittest.TestCase):
             self.coordinator.handle(enable, lease_id=self.lease_id).status,
             CommandStatus.SUCCEEDED,
         )
-        home = command(CommandName.HOME, HomePayload(5))
+        home = command(CommandName.HOME, HomePayload(20))
         self.assertEqual(
             self.coordinator.handle(home, lease_id=self.lease_id).status,
             CommandStatus.RUNNING,
         )
-        self.servo.advance(3)
+        self.servo.advance(20)
         self.coordinator.refresh()
         self.assertEqual(
             self.coordinator.result_for(home.command_id).status,

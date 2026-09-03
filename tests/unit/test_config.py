@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from knee_rig.common.config import ConfigValidationError, load_config
+from knee_rig.common.models import HomingStrategy
 
 
 class ConfigTests(unittest.TestCase):
@@ -145,6 +146,44 @@ class ConfigTests(unittest.TestCase):
             with self.assertRaises(ConfigValidationError) as caught:
                 load_config(shared_paths=[path])
         self.assertIn("BYTEORDER_MUST_REMAIN_UNVERIFIED", caught.exception.codes)
+
+    def test_selected_homing_strategy_serializes_from_example(self) -> None:
+        config = load_config(shared_paths=[Path("config/common.example.toml")])
+        self.assertIs(config.homing.strategy, HomingStrategy.POSITIVE_LIMIT_REFERENCE)
+        self.assertEqual(config.homing.strategy.value, "POSITIVE_LIMIT_REFERENCE")
+
+    def test_enabled_homing_rejects_missing_parameters(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_directory:
+            path = self._write(
+                Path(raw_directory),
+                "bad.toml",
+                "[features]\nallow_homing = true\n",
+            )
+            with self.assertRaises(ConfigValidationError) as caught:
+                load_config(shared_paths=[path])
+        self.assertIn("HOMING_PARAMETER_UNCONFIGURED", caught.exception.codes)
+        self.assertIn("WRONG_HOME_OFFSET_DIRECTION", caught.exception.codes)
+
+    def test_enabled_homing_rejects_wrong_offset_direction(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_directory:
+            path = self._write(
+                Path(raw_directory),
+                "bad.toml",
+                """[features]
+allow_homing = true
+[homing]
+search_speed_units_per_tick = 1.0
+backoff_speed_units_per_tick = 1.0
+search_distance_units = 5.0
+backoff_distance_units = 2.0
+home_offset_units = 2.0
+search_timeout_ticks = 8
+backoff_timeout_ticks = 4
+""",
+            )
+            with self.assertRaises(ConfigValidationError) as caught:
+                load_config(shared_paths=[path])
+        self.assertIn("WRONG_HOME_OFFSET_DIRECTION", caught.exception.codes)
 
 
 if __name__ == "__main__":

@@ -57,3 +57,16 @@ def test_reader_is_symbolic_and_gui_has_no_reader_integration() -> None:
     for path in (root / "src/knee_rig/gui").rglob("*.py"):
         text = path.read_text(encoding="utf-8")
         assert "ReadOnlyServoReader" not in text
+        assert "motion.diagnostics" not in text
+        tree = ast.parse(text)
+        imports = {
+            alias.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Import)
+            for alias in node.names
+        } | {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
+        assert not any(
+            name == forbidden or name.startswith(f"{forbidden}.")
+            for name in imports
+            for forbidden in ("serial", "minimalmodbus", "pymodbus")
+        )

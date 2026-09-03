@@ -14,6 +14,25 @@ stop_bits = 1
 timeout_s = 1.0
 byteorder_32 = "unverified"
 legacy_byteorder_hypothesis = "little"
+pl_input_number = 0
+nl_input_number = 0
+pl_active_level = "unverified"
+nl_active_level = "unverified"
+
+[homing]
+strategy = "POSITIVE_LIMIT_REFERENCE"
+search_direction = 1
+search_speed_units_per_tick = 0.0
+backoff_speed_units_per_tick = 0.0
+search_distance_units = 0.0
+backoff_distance_units = 0.0
+home_offset_units = 0.0
+search_timeout_ticks = 0
+backoff_timeout_ticks = 0
+drive_internal_mode = 18
+pl_polarity_verified = false
+nl_polarity_verified = false
+installed_drive_internal_mode_verified = false
 
 [raspberry_pi]
 # Intentionally blank; do not commit a machine-specific address or credentials.
@@ -44,4 +63,3 @@ allow_motion = false
 allow_homing = false
 allow_persistent_parameter_write = false
 calibration_verified = false
-

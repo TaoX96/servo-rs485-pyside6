@@ -3,7 +3,8 @@
 This repository defines a distributed control and monitoring system for a knee-test rig.
 The intended operator interface is a PySide6 application on Windows, while a Raspberry Pi
 will own motion communication and monitoring services. The project is currently at
-**Milestone 6: evidence intake and Gate B reassessment**. Current safety level: **Simulation**.
+**Milestone 7: laboratory commissioning preparation and positive-limit homing design**.
+Current safety level: **Controlled read-only commissioning preparation**.
 
 Milestone 2 adds a minimal PySide6 operator shell and a high-level motion-client boundary
 over the Milestone 1 deterministic simulation. It exercises state presentation, command
@@ -27,17 +28,26 @@ design. Gate A (offline) passes; Gates B (real raw reads), C (trusted physical t
 and D (motion) remain blocked. The exact installed identities and compatible communication
 manual are missing. Series C0A.06 word-order options do not verify the installed layout.
 No real transport or adapter skeleton was added, and no device or network was accessed.
-Milestone 6 reviews five immutable local PDF excerpts. The A6-RS communication chapter
-supports FC03 and direct group/offset PDU addressing for documented C parameters, and the
-adapter manual documents its named product's isolation and automatic direction. Installed
-identity/firmware, U-monitor mapping, current settings/wiring and safe disabled/restraint
-evidence remain unresolved, so Gate B remains blocked and no first-read candidate is
-approved. Milestone 7 is not started.
+Milestone 6 reviewed five immutable local PDF excerpts. Milestone 7 applies the manual's
+generic FC03 parameter-read rule to three read-only U16 monitor parameters: `U41.0A`
+servo status, `U41.08` planning group, and `U40.04` raw digital-input status. It adds a
+Pi-only, explicitly armed, one-request diagnostic and a harmless configuration preview.
+No serial discovery, numeric-address interface, retry, polling, write path, or GUI access
+to RS485 exists. Historical successful LabVIEW operation supports the communication
+method but is not a current Raspberry Pi capture or installed-wiring verification.
 
-There is still no network client or server, Raspberry Pi service, monitoring service,
-Modbus driver, camera or temperature implementation, deployment unit, or executable real
-hardware-control path. The GUI remains in-process simulation-only, is not connected to
-the new reader, and does not display hardware status.
+The selected future homing strategy is `POSITIVE_LIMIT_REFERENCE`: PL is both the
+positive travel limit and initial reference, NL remains the independent negative limit,
+and an independent HSW and encoder-index refinement are deferred. This behavior exists
+only in deterministic simulation. The family manual documents drive-internal positive
+limit homing mode 18, but installed drive/firmware applicability and configuration remain
+unverified. Real Servo On, Fault Reset, homing, motion, and register writes remain
+prohibited.
+
+There is still no network client or server, deployed Raspberry Pi service, monitoring
+service, camera or temperature implementation, deployment unit, or executable real
+hardware-control path. The GUI remains in-process simulation-only and cannot reach the
+diagnostic transport.
 
 ## Responsibilities
 
@@ -100,6 +110,27 @@ encoding, direction, limits, and calibration are verified, real Servo On, homing
 automatic cycling, absolute-position motion, and persistent parameter writes are
 prohibited.
 
+## Prepare a one-shot laboratory read
+
+On the Raspberry Pi, create an untracked local configuration with the exact stable
+`/dev/serial/by-id/...` path. Preview the request without opening the device:
+
+```bash
+python -m knee_rig.motion.diagnostics validate-config \
+  --config config/pi.local.toml --register SERVO_STATUS
+```
+
+Only after Stop Points A and B in the commissioning checklist and explicit authorization
+for that exact read, run one armed request:
+
+```bash
+python -m knee_rig.motion.diagnostics read \
+  --config config/pi.local.toml --register SERVO_STATUS \
+  --arm-read-only-hardware
+```
+
+Each invocation permits one allowlisted FC03/U16 request and closes the port afterward.
+
 The pure codec and catalog tests can be run independently:
 
 ```powershell
@@ -149,6 +180,9 @@ servo-rs485-pyside6/
 - [New evidence intake manifest](docs/evidence/intake-manifest.md)
 - [Hardware readiness and evidence requests](docs/hardware-readiness.md)
 - [Future read-only commissioning design](docs/read-only-commissioning.md)
+- [Laboratory Session 1 checklist](docs/lab-commissioning-session-1.md)
+- [Laboratory observation record](docs/lab-observation-record.md)
+- [Positive-limit homing commissioning plan](docs/pl-homing-commissioning.md)
 - [Future milestone prompts](docs/codex-prompts.md)
 
 Files under `docs/reference/` are evidence only. Do not edit, rename, move, or execute

@@ -33,9 +33,9 @@ def _ready_client() -> InProcessSimulationClient:
         client.submit(CommandName.ENABLE_SERVO, EnableServoPayload(True)).status
         is CommandStatus.SUCCEEDED
     )
-    home = client.submit(CommandName.HOME, HomePayload(5))
+    home = client.submit(CommandName.HOME, HomePayload(20))
     assert home.status is CommandStatus.RUNNING
-    client.advance(3)
+    client.advance(20)
     assert client.state().homing is HomingState.HOMED
     return client
 
@@ -180,9 +180,9 @@ def test_homing_failure_and_limit_injections() -> None:
     client.connect()
     client.acquire_lease()
     client.submit(CommandName.ENABLE_SERVO, EnableServoPayload(True))
-    client.inject_fault(SimulationFault.HSW_NOT_FOUND)
-    client.submit(CommandName.HOME, HomePayload(5))
-    client.advance(3)
+    client.inject_fault(SimulationFault.PL_NEVER_FOUND)
+    client.submit(CommandName.HOME, HomePayload(20))
+    client.advance(5)
     assert client.state().homing is HomingState.HOMING_FAULT
 
     second = InProcessSimulationClient()
@@ -338,5 +338,5 @@ def test_finite_cycle_pause_explicit_resume_and_controlled_stop() -> None:
 def test_event_history_is_bounded() -> None:
     client = InProcessSimulationClient()
     for _ in range(120):
-        client.inject_fault(SimulationFault.HSW_NOT_FOUND)
+        client.inject_fault(SimulationFault.PL_NEVER_FOUND)
     assert len(client.events()) == 100

@@ -24,8 +24,9 @@ mechanical and electrical review.
   motion as defined by the qualified electrical safety design.
 - Physical positive and negative travel switches, PL and NL, must prevent travel beyond
   the safe mechanism range without relying on software limits.
-- A dedicated HSW home switch is required for switch-based homing. Its position, active
-  level, approach direction, and relationship to PL and NL must be verified.
+- The selected future homing reference is PL itself. Its position, input assignment,
+  active level, positive approach direction, stop behavior, release distance, and
+  relationship to NL must be verified. An independent HSW is deferred.
 - Software angle and travel limits are supplementary protections only. They do not replace
   PL, NL, safe mechanics, or the E-stop/STO path.
 - A qualified person must review and approve the final electrical safety circuit, wiring,
@@ -36,7 +37,9 @@ mechanical and electrical review.
 - Documentation, architecture, code review, and configuration design.
 - Simulation-only development and hardware-independent automated tests.
 - Static inspection of manuals and legacy evidence without executing control code.
-- Design of read-only diagnostics, provided no real port or device is accessed.
+- Design and offline validation of read-only diagnostics.
+- After separate authorization, one supervised, one-shot, allowlisted read while powered
+  but Servo Disabled, following the Session 1 stop points. This grants no motion authority.
 
 ## Prohibited before safety hardware is installed and verified
 
@@ -57,7 +60,8 @@ Real motion remains prohibited until all applicable items are recorded and appro
 - [ ] Physical E-stop operates independently of the PC, Pi, network, and RS485.
 - [ ] STO or Servo Enable removal behavior is verified, including loss of holding torque.
 - [ ] PL and NL stop travel in the intended directions and cannot be bypassed by software.
-- [ ] HSW position, logic, direction, repeatability, and separation from PL/NL are verified.
+- [ ] PL's dual role as positive limit and reference is reviewed; assignment, polarity,
+      approach, stop, release, repeatability, and negative home offset are verified.
 - [ ] Operator can reach the E-stop and maintain a clear exclusion zone throughout testing.
 - [ ] USB-RS485 adapter, isolation, termination, grounding, and cable routing are recorded.
 - [ ] Slave address and serial settings are verified using an approved read-only procedure.
@@ -85,3 +89,6 @@ is not an emergency stop and does not replace the independent hardware safety sy
 No real hardware test may be unattended or run without explicit authorization for that
 test. Commissioning must proceed through separately reviewed, bounded, low-energy stages;
 this document does not authorize any such stage.
+
+Milestone 7 permits preparation for a controlled read-only session only. Completion of
+Session 1 does not authorize Servo On, Fault Reset, homing, or motion.

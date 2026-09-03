@@ -42,8 +42,10 @@ class ClientEvent:
 class SimulationFault(StrEnum):
     COMMUNICATION_LOSS = "communication_loss"
     DRIVE_FAULT = "drive_fault"
-    HSW_NOT_FOUND = "hsw_not_found"
     HOMING_TIMEOUT = "homing_timeout"
+    PL_NEVER_FOUND = "pl_never_found"
+    PL_STUCK_ACTIVE = "pl_stuck_active"
+    BACKOFF_TIMEOUT = "backoff_timeout"
     PL_ACTIVE = "pl_active"
     NL_ACTIVE = "nl_active"
     PL_AND_NL_ACTIVE = "pl_and_nl_active"

@@ -37,10 +37,11 @@ class VerificationStatus(StrEnum):
 
 
 class RegisterArea(StrEnum):
-    """No real register-area or function-code mapping has been established."""
+    """Explicit acquisition namespace; catalog membership is never authorization."""
 
     UNRESOLVED = "unresolved"
     OFFLINE_FIXTURE = "offline_fixture"
+    MODBUS_PARAMETER_FC03 = "modbus_parameter_fc03"
 
 
 @dataclass(frozen=True, slots=True)

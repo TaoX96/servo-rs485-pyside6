@@ -101,6 +101,8 @@ class MainWindow(QMainWindow):
             ("connection", "Simulated connection"),
             ("servo", "Servo"),
             ("homing", "Homing"),
+            ("homing_reference", "Selected homing reference"),
+            ("homing_phase", "Simulated homing phase"),
             ("motion", "Motion"),
             ("lease", "Control lease"),
             ("motion_permitted", "Motion commands permitted"),
@@ -128,7 +130,7 @@ class MainWindow(QMainWindow):
             ("freshness", "Validity / freshness"),
             ("pl", "PL"),
             ("nl", "NL"),
-            ("hsw", "HSW"),
+            ("hsw", "HSW (deferred / unused)"),
             ("cycle_progress", "Finite-cycle progress"),
         )
         for key, title in fields:
@@ -147,7 +149,7 @@ class MainWindow(QMainWindow):
         self.negative_input = self._input("-10", "negativeInput")
         self.speed_input = self._input("1", "speedInput")
         self.cycle_count_input = self._input("2", "cycleCountInput")
-        self.homing_timeout_input = self._input("5", "homingTimeoutInput")
+        self.homing_timeout_input = self._input("20", "homingTimeoutInput")
         form.addRow("Move target (application units):", self.target_input)
         form.addRow("Cycle positive target (application units):", self.positive_input)
         form.addRow("Cycle negative target (application units):", self.negative_input)
@@ -196,7 +198,7 @@ class MainWindow(QMainWindow):
                 "Disable Simulated Servo",
                 lambda: DisableServoPayload(True),
             ),
-            (CommandName.HOME, "Start Simulated Homing", self._home_payload),
+            (CommandName.HOME, "Start Simulated PL-Reference Homing", self._home_payload),
             (CommandName.START_SINGLE_MOVE, "Start Simulated Single Move", self._move_payload),
             (CommandName.START_CYCLE, "Start Simulated Finite Cycle", self._cycle_payload),
             (CommandName.PAUSE, "Pause", PausePayload),
@@ -226,8 +228,10 @@ class MainWindow(QMainWindow):
         options = (
             ("Communication Loss", SimulationFault.COMMUNICATION_LOSS),
             ("Drive Fault", SimulationFault.DRIVE_FAULT),
-            ("Arm HSW Not Found", SimulationFault.HSW_NOT_FOUND),
-            ("Arm Homing Timeout", SimulationFault.HOMING_TIMEOUT),
+            ("Arm PL Never Found", SimulationFault.PL_NEVER_FOUND),
+            ("Arm Search Timeout", SimulationFault.HOMING_TIMEOUT),
+            ("Arm PL Stuck Active", SimulationFault.PL_STUCK_ACTIVE),
+            ("Arm Backoff Timeout", SimulationFault.BACKOFF_TIMEOUT),
             ("PL Active", SimulationFault.PL_ACTIVE),
             ("NL Active", SimulationFault.NL_ACTIVE),
             ("PL + NL Active", SimulationFault.PL_AND_NL_ACTIVE),
@@ -339,7 +343,7 @@ class MainWindow(QMainWindow):
         payloads: dict[CommandName, CommandPayload] = {
             CommandName.ENABLE_SERVO: EnableServoPayload(True),
             CommandName.DISABLE_SERVO: DisableServoPayload(True),
-            CommandName.HOME: HomePayload(5),
+            CommandName.HOME: HomePayload(20),
             CommandName.PAUSE: PausePayload(),
             CommandName.RESUME: ResumePayload(True),
             CommandName.CONTROLLED_STOP: ControlledStopPayload(),

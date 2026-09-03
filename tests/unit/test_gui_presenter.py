@@ -72,6 +72,8 @@ def test_presenter_uses_explicit_units_and_cycle_progress() -> None:
     assert view.telemetry.pl == "[ACTIVE] Yes"
     assert view.telemetry.nl == "[INACTIVE] No"
     assert view.telemetry.hsw == "[ACTIVE] Yes"
+    assert view.homing_reference.startswith("PL (positive travel limit")
+    assert view.homing_phase == "IDLE"
     assert view.telemetry.cycle_progress == "3 completed cycle(s)"
     assert view.motion_permitted == "[PERMITTED] Yes"
 

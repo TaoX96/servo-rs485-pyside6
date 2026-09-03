@@ -1,6 +1,6 @@
 # Raspberry Pi deployment design
 
-Deployment remains design-only through Milestone 6. The repository does not provide,
+Deployment remains design-only through Milestone 7. The repository does not provide,
 install, enable, or start any systemd unit.
 
 ## Planned services
@@ -76,3 +76,7 @@ Before creating units, define the dedicated users/groups, udev permissions for t
 adapter, configuration paths, API authentication and TLS/network policy, log retention,
 shutdown semantics, health checks, and service hardening. Unit installation and startup
 require a later explicitly approved milestone.
+
+The Milestone 7 diagnostic is a manually invoked Pi-only command, not a daemon or systemd
+service. It performs one symbolic read per armed invocation and has no startup, reconnect,
+or background polling behavior.

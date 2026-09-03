@@ -35,12 +35,12 @@ class FakeServoTests(unittest.TestCase):
         servo.connect()
         self.assertTrue(servo.request_servo_enable().accepted)
         self.assertEqual(servo.read_status().servo, ServoState.SERVO_ENABLED)
-        receipt = servo.request_homing(timeout_ticks=5)
+        receipt = servo.request_homing(timeout_ticks=20)
         self.assertTrue(receipt.accepted)
         self.assertFalse(receipt.completed)
-        servo.advance(3)
+        servo.advance(20)
         self.assertEqual(servo.read_status().homing, HomingState.HOMED)
-        self.assertTrue(servo.read_status().limits.hsw_active)
+        self.assertFalse(servo.read_status().limits.hsw_active)
 
     def test_homing_timeout(self) -> None:
         servo = FakeServo()
@@ -51,15 +51,15 @@ class FakeServoTests(unittest.TestCase):
         self.assertEqual(servo.read_status().homing, HomingState.HOMING_FAULT)
         self.assertEqual(servo.read_status().active_fault_code, "HOMING_TIMEOUT")
 
-    def test_hsw_not_found(self) -> None:
+    def test_pl_not_found(self) -> None:
         servo = FakeServo()
         servo.connect()
         servo.request_servo_enable()
-        servo.set_next_homing_failure(HomingFailure.HSW_NOT_FOUND)
-        servo.request_homing(timeout_ticks=5)
-        servo.advance(3)
+        servo.set_next_homing_failure(HomingFailure.PL_NEVER_FOUND)
+        servo.request_homing(timeout_ticks=20)
+        servo.advance(5)
         self.assertEqual(servo.read_status().homing, HomingState.HOMING_FAULT)
-        self.assertEqual(servo.read_status().active_fault_code, "HSW_NOT_FOUND")
+        self.assertEqual(servo.read_status().active_fault_code, "PL_NOT_FOUND")
 
     def test_single_bounded_move(self) -> None:
         servo = connected_enabled_homed_servo()

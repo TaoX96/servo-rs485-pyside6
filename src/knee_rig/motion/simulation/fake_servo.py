@@ -6,10 +6,13 @@ import math
 from dataclasses import dataclass
 from enum import StrEnum
 
+from knee_rig.common.config.models import HomingConfig
 from knee_rig.common.models import (
     AlarmInfo,
     ConnectionState,
+    HomingPhase,
     HomingState,
+    HomingStrategy,
     LimitInputState,
     MotionState,
     ServoState,
@@ -22,13 +25,23 @@ from knee_rig.motion.simulation.clock import ManualClock
 
 class HomingFailure(StrEnum):
     TIMEOUT = "TIMEOUT"
-    HSW_NOT_FOUND = "HSW_NOT_FOUND"
+    PL_NEVER_FOUND = "PL_NEVER_FOUND"
+    PL_STUCK_ACTIVE = "PL_STUCK_ACTIVE"
+    BACKOFF_TIMEOUT = "BACKOFF_TIMEOUT"
+    CONTROLLED_STOP_UNCONFIRMED = "CONTROLLED_STOP_UNCONFIRMED"
 
 
 @dataclass(slots=True)
 class _HomingOperation:
-    elapsed_ticks: int
-    timeout_ticks: int
+    phase: HomingPhase
+    phase_ticks: int
+    total_ticks: int
+    overall_timeout_ticks: int
+    search_start_position: float
+    pl_trigger_position: float
+    pl_detection_position: float | None
+    backoff_start_position: float | None
+    offset_target_position: float | None
     failure: HomingFailure | None
 
 
@@ -60,15 +73,26 @@ class FakeServo:
         clock: ManualClock | None = None,
         minimum_position_units: float = -100.0,
         maximum_position_units: float = 100.0,
+        homing_config: HomingConfig | None = None,
     ) -> None:
         if not minimum_position_units < maximum_position_units:
             raise ValueError("minimum_position_units must be below maximum_position_units")
         self._clock = clock if clock is not None else ManualClock()
         self._minimum_position_units = minimum_position_units
         self._maximum_position_units = maximum_position_units
+        self._homing_config = homing_config or HomingConfig(
+            search_speed_units_per_tick=1.0,
+            backoff_speed_units_per_tick=1.0,
+            search_distance_units=5.0,
+            backoff_distance_units=2.0,
+            home_offset_units=-2.0,
+            search_timeout_ticks=8,
+            backoff_timeout_ticks=4,
+        )
         self._connection = ConnectionState.DISCONNECTED
         self._servo = ServoState.SERVO_DISABLED
         self._homing = HomingState.UNHOMED
+        self._homing_phase = HomingPhase.IDLE
         self._motion = MotionState.IDLE
         self._limits = LimitInputState()
         self._active_fault_code: str | None = None
@@ -95,6 +119,7 @@ class FakeServo:
         self._connection = ConnectionState.CONNECTED
         self._servo = ServoState.SERVO_DISABLED
         self._homing = HomingState.UNHOMED
+        self._homing_phase = HomingPhase.IDLE
         self._motion = MotionState.IDLE
         self._operation = None
         self._velocity_units_per_s = 0.0
@@ -105,6 +130,7 @@ class FakeServo:
         self._connection = ConnectionState.DISCONNECTED
         self._servo = ServoState.SERVO_DISABLED
         self._homing = HomingState.UNHOMED
+        self._homing_phase = HomingPhase.IDLE
         self._motion = MotionState.IDLE
         self._operation = None
         self._velocity_units_per_s = 0.0
@@ -117,6 +143,8 @@ class FakeServo:
             servo=self._servo,
             homing=self._homing,
             motion=self._motion,
+            homing_strategy=HomingStrategy.POSITIVE_LIMIT_REFERENCE,
+            homing_phase=self._homing_phase,
             limits=self._limits,
             active_fault_code=self._active_fault_code,
         )
@@ -154,13 +182,46 @@ class FakeServo:
             return OperationReceipt(False, False, "INVALID_STATE", "Homing requires enabled idle.")
         if timeout_ticks <= 0:
             return OperationReceipt(False, False, "INVALID_ARGUMENT", "Timeout must be positive.")
+        if self._limits.pl_active and self._limits.nl_active:
+            return OperationReceipt(
+                False, False, "INVALID_LIMIT_STATE", "PL and NL are contradictory."
+            )
+        if self._limits.pl_active:
+            return OperationReceipt(
+                False,
+                False,
+                "PL_ACTIVE_AT_START",
+                "PL is already active and no recovery sequence is authorized.",
+            )
+        if not self._valid_homing_config():
+            return OperationReceipt(
+                False,
+                False,
+                "HOMING_CONFIG_INVALID",
+                "Positive-limit homing parameters are missing or incorrectly signed.",
+            )
         self._homing = HomingState.HOMING
-        self._limits = LimitInputState(
-            pl_active=self._limits.pl_active,
-            nl_active=self._limits.nl_active,
-            hsw_active=False,
+        self._homing_phase = HomingPhase.SEARCHING_POSITIVE_LIMIT
+        self._motion = MotionState.STARTING
+        trigger_distance = min(
+            self._homing_config.search_distance_units / 2.0,
+            self._homing_config.search_speed_units_per_tick * 2.0,
         )
-        self._operation = _HomingOperation(0, timeout_ticks, self._next_homing_failure)
+        self._operation = _HomingOperation(
+            phase=HomingPhase.SEARCHING_POSITIVE_LIMIT,
+            phase_ticks=0,
+            total_ticks=0,
+            overall_timeout_ticks=timeout_ticks,
+            search_start_position=self._position_units,
+            pl_trigger_position=min(
+                self._maximum_position_units,
+                self._position_units + trigger_distance,
+            ),
+            pl_detection_position=None,
+            backoff_start_position=None,
+            offset_target_position=None,
+            failure=self._next_homing_failure,
+        )
         self._next_homing_failure = None
         return OperationReceipt(True, False)
 
@@ -261,6 +322,7 @@ class FakeServo:
             self._servo = ServoState.SERVO_DISABLED
         if self._homing is HomingState.HOMING_FAULT:
             self._homing = HomingState.UNHOMED
+        self._homing_phase = HomingPhase.IDLE
         if self._motion is MotionState.MOTION_FAULT:
             self._motion = MotionState.IDLE
         self._operation = None
@@ -321,6 +383,19 @@ class FakeServo:
                 motion_fault=self._motion is not MotionState.IDLE,
             )
             return
+        operation = self._operation
+        if isinstance(operation, _HomingOperation):
+            if nl_active:
+                self._enter_fault(
+                    "UNEXPECTED_NL_DURING_HOMING",
+                    "NL activated during positive-limit homing.",
+                    motion_fault=True,
+                )
+                return
+            if pl_active and operation.phase is HomingPhase.SEARCHING_POSITIVE_LIMIT:
+                operation.pl_detection_position = self._position_units
+                self._set_homing_phase(operation, HomingPhase.CONTROLLED_STOP_AT_LIMIT)
+            return
         direction = self._motion_direction()
         if (pl_active and direction > 0) or (nl_active and direction < 0):
             self._enter_fault(
@@ -340,6 +415,7 @@ class FakeServo:
         was_active = self._motion is not MotionState.IDLE or self._homing is HomingState.HOMING
         self._connection = ConnectionState.COMMUNICATION_FAULT
         self._homing = HomingState.UNHOMED
+        self._homing_phase = HomingPhase.FAULT
         self._operation = None
         self._velocity_units_per_s = 0.0
         self._torque_percent = 0.0
@@ -361,26 +437,106 @@ class FakeServo:
         self._record_alarm(code, message)
 
     def _advance_homing(self, operation: _HomingOperation) -> None:
-        operation.elapsed_ticks += 1
-        if operation.failure is HomingFailure.HSW_NOT_FOUND and operation.elapsed_ticks >= 3:
-            self._homing = HomingState.HOMING_FAULT
-            self._operation = None
-            self._record_alarm("HSW_NOT_FOUND", "Simulated HSW was not found.")
+        operation.total_ticks += 1
+        operation.phase_ticks += 1
+        if operation.total_ticks >= operation.overall_timeout_ticks:
+            self._enter_homing_fault("HOMING_TIMEOUT", "Simulated homing timed out.")
             return
-        if operation.elapsed_ticks >= operation.timeout_ticks:
-            self._homing = HomingState.HOMING_FAULT
-            self._operation = None
-            self._record_alarm("HOMING_TIMEOUT", "Simulated homing timed out.")
+        if operation.phase is HomingPhase.SEARCHING_POSITIVE_LIMIT:
+            self._motion = MotionState.MOVING
+            if operation.phase_ticks >= self._homing_config.search_timeout_ticks:
+                self._enter_homing_fault("HOMING_SEARCH_TIMEOUT", "PL search timed out.")
+                return
+            if operation.failure is HomingFailure.TIMEOUT:
+                self._velocity_units_per_s = 0.0
+                return
+            step = self._homing_config.search_speed_units_per_tick
+            self._position_units += step
+            self._velocity_units_per_s = step
+            travelled = self._position_units - operation.search_start_position
+            never_found = operation.failure is HomingFailure.PL_NEVER_FOUND
+            if never_found and travelled >= self._homing_config.search_distance_units:
+                self._enter_homing_fault("PL_NOT_FOUND", "PL was not found within search distance.")
+                return
+            if not never_found and self._position_units >= operation.pl_trigger_position:
+                self._limits = LimitInputState(True, False, False)
+                operation.pl_detection_position = self._position_units
+                self._set_homing_phase(operation, HomingPhase.CONTROLLED_STOP_AT_LIMIT)
             return
-        if operation.failure is None and operation.elapsed_ticks >= 3:
+        if operation.phase is HomingPhase.CONTROLLED_STOP_AT_LIMIT:
+            if operation.failure is HomingFailure.CONTROLLED_STOP_UNCONFIRMED:
+                self._enter_homing_fault(
+                    "HOMING_CONTROLLED_STOP_UNCONFIRMED",
+                    "Controlled stop at PL was not confirmed.",
+                )
+                return
+            self._velocity_units_per_s = 0.0
+            operation.backoff_start_position = self._position_units
+            self._set_homing_phase(operation, HomingPhase.BACKING_OFF_POSITIVE_LIMIT)
+            return
+        if operation.phase is HomingPhase.BACKING_OFF_POSITIVE_LIMIT:
+            if operation.phase_ticks >= self._homing_config.backoff_timeout_ticks:
+                self._enter_homing_fault("HOMING_BACKOFF_TIMEOUT", "PL backoff timed out.")
+                return
+            step = -self._homing_config.backoff_speed_units_per_tick
+            self._position_units += step
+            self._velocity_units_per_s = step
+            assert operation.backoff_start_position is not None
+            backed_off = operation.backoff_start_position - self._position_units
+            if operation.failure is HomingFailure.BACKOFF_TIMEOUT:
+                return
+            if operation.failure is not HomingFailure.PL_STUCK_ACTIVE and backed_off >= step * -1:
+                self._limits = LimitInputState(False, False, False)
+            if backed_off >= self._homing_config.backoff_distance_units:
+                if self._limits.pl_active:
+                    self._enter_homing_fault("PL_STUCK_ACTIVE", "PL did not clear during backoff.")
+                    return
+                operation.offset_target_position = (
+                    self._position_units + self._homing_config.home_offset_units
+                )
+                self._set_homing_phase(operation, HomingPhase.APPLYING_HOME_OFFSET)
+            return
+        if operation.phase is HomingPhase.APPLYING_HOME_OFFSET:
+            assert operation.offset_target_position is not None
+            if self._homing_config.home_offset_units >= 0:
+                self._enter_homing_fault(
+                    "WRONG_HOME_OFFSET_DIRECTION",
+                    "Home offset must move in the negative direction.",
+                )
+                return
+            delta = operation.offset_target_position - self._position_units
+            if delta < 0:
+                step = -min(abs(delta), self._homing_config.backoff_speed_units_per_tick)
+                self._position_units += step
+                self._velocity_units_per_s = step
+            if math.isclose(
+                self._position_units,
+                operation.offset_target_position,
+                abs_tol=1e-12,
+            ):
+                self._velocity_units_per_s = 0.0
+                self._set_homing_phase(operation, HomingPhase.VERIFYING_COMPLETION)
+            return
+        if operation.phase is HomingPhase.VERIFYING_COMPLETION:
+            if self._limits.pl_active:
+                self._enter_homing_fault("PL_ACTIVE_AT_COMPLETION", "PL remained active.")
+                return
             self._homing = HomingState.HOMED
+            self._homing_phase = HomingPhase.COMPLETE
+            self._motion = MotionState.IDLE
             self._position_units = 0.0
-            self._limits = LimitInputState(
-                pl_active=self._limits.pl_active,
-                nl_active=self._limits.nl_active,
-                hsw_active=True,
-            )
+            self._velocity_units_per_s = 0.0
+            self._torque_percent = 0.0
             self._operation = None
+
+    def _set_homing_phase(self, operation: _HomingOperation, phase: HomingPhase) -> None:
+        operation.phase = phase
+        operation.phase_ticks = 0
+        self._homing_phase = phase
+
+    def _enter_homing_fault(self, code: str, message: str) -> None:
+        self._homing_phase = HomingPhase.FAULT
+        self._enter_fault(code, message, motion_fault=True)
 
     def _advance_motion(self, operation: _MoveOperation | _CycleOperation) -> None:
         if self._motion is MotionState.STARTING:
@@ -447,6 +603,20 @@ class FakeServo:
             and speed > 0
         )
 
+    def _valid_homing_config(self) -> bool:
+        config = self._homing_config
+        return (
+            config.strategy is HomingStrategy.POSITIVE_LIMIT_REFERENCE
+            and config.search_direction == 1
+            and config.search_speed_units_per_tick > 0
+            and config.backoff_speed_units_per_tick > 0
+            and config.search_distance_units > 0
+            and config.backoff_distance_units > 0
+            and config.home_offset_units < 0
+            and config.search_timeout_ticks > 0
+            and config.backoff_timeout_ticks > 0
+        )
+
     def _reject_if_unavailable(self) -> OperationReceipt | None:
         if self._connection is not ConnectionState.CONNECTED:
             return OperationReceipt(False, False, "NOT_CONNECTED", "Communication is unavailable.")
@@ -477,6 +647,7 @@ class FakeServo:
             self._servo = ServoState.SERVO_FAULT
         if self._homing is HomingState.HOMING:
             self._homing = HomingState.HOMING_FAULT
+            self._homing_phase = HomingPhase.FAULT
         if motion_fault or self._motion is not MotionState.IDLE:
             self._motion = MotionState.MOTION_FAULT
         self._operation = None

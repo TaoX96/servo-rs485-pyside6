@@ -1,175 +1,67 @@
-# Hardware readiness — Milestone 6 reassessment
+# Hardware readiness — Milestone 7
 
-Current safety level: **Simulation**. This is a documentation/evidence audit, not a
-hardware test. No real adapter, adapter skeleton, connection, device discovery, register
-read/write or deployment exists as a result of Milestone 6. Real enable, homing and motion
-remain prohibited. Readiness is assessed from the [evidence matrix](evidence-matrix.md),
-not from assuming that historical code still describes the rig.
+Current safety level: **Controlled read-only commissioning preparation**. Milestone 7
+provides a bounded diagnostic and machine-side checklists. No hardware was accessed and
+no motion is authorized.
 
-## Gate decisions
+## Readiness gates
 
-| Gate | Current result | Evidence / outstanding decision |
+| Gate | Status | Meaning |
 |---|---|---|
-| A — Offline codec readiness | **PASS** | Committed Milestone 4 (`0031e4b`); pure codecs, conservative catalog, fake transport, allowlists, ambiguity preservation and offline tests. Entry checks: Ruff and format pass, mypy 32 source files, pytest 164 passed. Only synthetic behavior is demonstrated. |
-| B — Real raw read readiness | **BLOCKED** | A6-RS family evidence establishes FC03 and C-parameter group/offset framing, but installed target/firmware, adapter/wiring/settings, U-monitor mapping, harmless read conditions and safe disabled/restraint evidence remain unresolved. |
-| C — Trusted typed telemetry readiness | **BLOCKED** | B plus speed width, active C0A.06 word order, U mapping, independent observations, plausibility/freshness and repeatability remain unverified. |
-| D — Motion readiness | **BLOCKED** | Independent safety, PL/NL, HSW, homing, joint calibration, direction, travel limits, holding/brake behavior and qualified review unresolved. |
+| A — Offline implementation | **PASS** | Codecs, allowlists, deterministic simulation, CLI framing/error paths, and cleanup are tested without hardware. |
+| B — First raw read | **PREPARED / CONDITIONAL** | Documentation supports a narrow U16/FC03 request. Session 1 must still verify the installed path, identity, settings, disabled state, wiring, supervision, and exact authorization before opening the port. |
+| C — Trusted physical telemetry | **BLOCKED** | No current Pi capture, installed applicability, freshness study, or PL/NL assignment/polarity verification exists. |
+| D — Servo Enable/homing/motion | **BLOCKED** | Independent safety, mechanics, limits, calibration, safe motion parameters, qualified review, and drive-internal homing configuration remain unresolved. |
 
-Passing A grants **no hardware permission**. Milestone 6 does not pass B. Passing B would
-establish evidence readiness only, not permission for a read or trusted interpretation.
-Gate B evidence readiness does not authorize hardware access. A separate implementation
-milestone and a separate explicit first-read authorization are still required. Passing C
-does not grant motion permission. No gate changes configuration, state, lease, homing or
-servo enablement automatically.
+Gate B is not blocked by D-only questions such as joint calibration or future homing
+speeds. Its conditional status does not authorize access by itself; the Session 1 stop
+points and explicit authorization govern the actual one-shot read.
 
-### Gate A acceptance
+## Gate B item reassessment
 
-Retain strict U16/I16/U32/I32 validation, signed/boundary/negative vectors and all four
-explicit layouts; preserve raw words and documentary metadata. Symbolic allowlists remain
-immutable; engineering reads remain disabled by default; displacement is not allowlisted.
-Unknown area/address/layout and malformed responses fail closed. Speed ambiguity must
-not become trusted telemetry. Fake checksums are injected failures, not real RTU CRC tests.
-No source/test changes are needed for this audit.
+The status terms below are intentionally source-specific. No item is marked verified on
+current hardware.
 
-### Gate B mandatory-condition reassessment
-
-| Mandatory condition | Result | Evidence / remaining blocker |
+| Item | Assessment | Basis / remaining action |
 |---|---|---|
-| Exact target drive identity | **BLOCKED** | Manual model tables/sample nameplates are not an installed nameplate; firmware unknown |
-| Manual applicability | **PARTIAL** | N1-N4 cover A6-RS family/listed models, but installed model/firmware cannot be matched |
-| Adapter identity | **PARTIAL** | N5 matches the historical product illustration; installed label/revision unverified |
-| Physical interface compatibility | **PARTIAL** | N2/N5 document RS485 +, -, GND; custom cable/electrical suitability unverified |
-| Wiring evidence | **BLOCKED** | No current isolated as-built wiring, grounding, termination or bias evidence |
-| Current communication settings | **BLOCKED** | No current record; defaults and legacy 9600/8/N/1 are not installed values |
-| Read function code | **PARTIAL** | FC03 explicit for C parameters; U monitor/status, I/O and alarm behavior unresolved |
-| Register area | **PARTIAL** | C group/offset defined; U areas not mapped |
-| Address convention | **PARTIAL** | C label-to-PDU mapping needs no +/-1; U and library conventions unresolved |
-| First harmless U16 candidate | **BLOCKED** | U41.0A lacks explicit U mapping/read-condition evidence; catalog C candidates are RW configuration |
-| Servo-disabled condition | **BLOCKED** | No current independent state/restraint evidence; N1 lists `Reading disabled` without condition mapping |
-| Request timeout | **PARTIAL** | Bounded timeout required; exact justified value/current response setting unresolved |
-| Retry policy | **PASS** | Future design fixes retries at zero |
-| Request count bound | **PASS** | Future design fixes one request, one U16 word and one outstanding request |
-| Read allowlist | **PASS** | Existing symbolic allowlist; this does not validate its addresses |
-| Capture plan | **PASS** | Full bytes, CRC/context and independent-observation template defined |
-| Explicit authorization | **PASS** | Separate implementation and exact first-read authorization required |
-| Stop after first unexpected result | **PASS** | Close and retain evidence; no fallback, retry or settings change |
+| A6-RS parameter read FC | **Confirmed by documentation** | Communication manual specifies FC03 for reading parameters. |
+| U parameter address rule | **Confirmed by documentation** | Generic parameter rule uses group as address high byte and offset as low byte; parameter list supplies U labels. |
+| `SERVO_STATUS` U41.0A, U16, RO | **Confirmed by documentation** | Selected first read at PDU address `0x410A`, one register. |
+| `PLAN_OPERATION_GROUP` U41.08, U16, RO | **Confirmed by documentation** | Optional later read at `0x4108`. |
+| `DI_STATUS` U40.04, U16, RO | **Confirmed by documentation** | Raw DI1-DI8 electrical levels at `0x4004`; bit/polarity interpretation remains installed evidence. |
+| RTU byte order and CRC | **Confirmed by documentation** | Response word is high byte then low byte; CRC uses polynomial `0xA001`, low CRC byte first. |
+| Slave 1, 9600, 8N1, 1 s | **Supported by historical operation** | Historical source and project material agree; current installed settings must be observed without changing them. |
+| Drive/RS485 method worked | **Supported by historical operation** | User-confirmed successful LabVIEW operation and historical project/source evidence; not a current Pi capture. |
+| Installed drive/model/firmware applicability | **Unresolved** | Record nameplate and display/version at Stop Points A/B. |
+| Installed adapter and stable Pi path | **Unresolved** | Record label and exact `/dev/serial/by-id/...`; no discovery is built into the tool. |
+| Current A/B/reference wiring and termination | **Unresolved** | De-energized inspection and qualified review. |
+| Current Servo Disabled/restraint state | **Unresolved** | Confirm independently before any powered read. |
+| Current PL/NL DI assignment and polarity | **Unresolved** | Observe assignment and stationary raw bit changes; never write settings. |
+| Current Raspberry Pi raw frames | **Unresolved** | None captured in Milestone 7. |
+| Joint calibration, homing parameters, motion limits | **Not required for first read-only test** | Required at Gate D, not for one stationary disabled-state status read. |
+| HSW and encoder index | **Not required for first read-only test** | Deferred by selected PL-reference strategy. |
 
-Overall Gate B is **BLOCKED** because every mandatory condition must pass. Documentary
-progress on FC03/C addresses cannot compensate for missing installed-device, U-status,
-wiring/settings and safe-test evidence.
+## Approved diagnostic shape
 
-### Gate B acceptance — requirements retained for future reassessment
+Only `SERVO_STATUS`, `PLAN_OPERATION_GROUP`, and `DI_STATUS` are compiled into the
+diagnostic allowlist. `SERVO_STATUS` is the first candidate because it is a single U16,
+read-only state value and does not require 32-bit layout or engineering interpretation.
+The preview command opens no device. The armed command is Raspberry-Pi-only, uses the
+exact local by-id path, sends one request, performs zero retries, captures the raw request
+and response, reports stable errors, and closes the port.
 
-The following evidence package and design review are required **before implementation**.
-Actual physical use additionally requires completion of offline adapter validation and
-fresh, explicit authorization for the exact physical test. A document review cannot
-authorize that test implicitly.
+`DI_STATUS` may follow only for the supervised stationary switch procedure. Its raw bits
+do not prove switch semantics. Until installed DI numbers and active levels are verified,
+the corresponding interpretation is `ACTIVE_LEVEL_UNVERIFIED`.
 
-- Identify the exact drive, motor and firmware; assess compatibility of the complete
-  manufacturer communication manual, including supported RTU framing and read behavior.
-- Confirm the actual adapter model/revision, isolation/direction behavior, drive and
-  adapter pinouts, A/B/reference wiring, biasing, termination, power and USB topology.
-- Confirm actual station, baud, data bits, parity, stop bits and response delay. Select a
-  bounded host timeout justified by the matched documentation; legacy defaults are not
-  measurements. No broadcast, station discovery or settings scan.
-- Confirm the harmless read function code for the chosen area. FC03 is supported for
-  documented C parameters, but U monitor/status mapping remains open; guessing FC04 or
-  extending the C rule is not a substitute.
-- Confirm transport address convention, or review a bounded evidence-derived candidate
-  plan with at most two candidates and separate approval before each. No range scan,
-  arithmetic fallback, write-only register or trigger probing.
-- Confirm response length, byte-to-word assembly, exception and CRC checks, request-size
-  constraints and timing. Raw bytes may be retained without claiming physical units.
-- Approve a qualified safe-energization and mechanical-restraint plan, including gravity
-  and brake behavior. The servo must be independently confirmed disabled, with no motion
-  command path and no dependence on software alone to prevent a hazard.
-- Define a fixed symbolic read allowlist, sole Pi-side serial owner and least-privilege
-  device access. The first test permits one reviewed U16 request, one outstanding request,
-  one bounded timeout and zero retries; end after success or first error. No GUI connection,
-  monitoring service, background polling or automatic recovery is part of that test.
-- Record operator/reviewer, exact test authorization, stop conditions and full capture
-  template before access. Hardware-facing phases in the [commissioning design](read-only-commissioning.md)
-  remain future work, separately authorized.
+## Remaining evidence before execution
 
-Unknown 32-bit layout does **not** by itself block an otherwise approved one-word raw
-read. Unresolved speed width blocks selecting that field/count, not every U16 field.
-Joint-angle calibration and HSW commissioning belong to D, not raw acquisition. However,
-unknown load restraint or safe disabled-state energization still blocks B. Scope the
-evidence requirements to the selected test; never use these distinctions to waive safety.
+At Stop Point A record drive/motor/adapter identity, de-energized wiring, termination,
+shielding, PL/NL mounting and terminals, contact type, DI assignment evidence, available
+Servo Enable removal, restraint, and clear travel. At Stop Point B record displayed
+firmware/settings, Servo Disabled evidence, the exact Pi device path, sole ownership, and
+the reviewed request preview. A qualified person must address any enclosure or electrical
+safety work; do not open an energized enclosure or touch live conductors.
 
-### Gate C acceptance — per field, not a global telemetry approval
-
-Require the matched width, signedness and wire representation, unit and exact scale.
-For 32-bit fields require independently validated byte/word order and coherent two-word
-acquisition, with evidence of any shared layout rule before reuse across registers.
-Compare against a keypad or other independent physical observation, with recorded
-plausibility bounds and bounded repeated reads. Preserve acquisition time, monotonic age,
-sequence, raw words, source, validity and stale/error indication; missing data is not zero.
-Resolve speed width before reporting its scalar. Application units stay application units;
-calibrated joint degrees are a separate D prerequisite. Neither telemetry nor a status
-value proves electrical isolation, safe holding torque, an effective E-stop or motion readiness.
-
-### Gate D acceptance — remains out of scope
-
-Require approved independent E-stop and STO/enable/contactor protection as applicable to
-the exact drive; installed PL/NL with verified wiring, levels, placement and stopping
-distance; HSW and the selected drive-internal homing method; mechanical hard stops, safe
-range and direction; validated joint conversion/zero/backlash assumptions; brake and
-gravity/holding behavior; qualified electrical and mechanical review; and separately
-approved bounded low-energy procedures. Controlled stop is not an emergency stop. Do not
-automatically issue Servo Off when loss of holding torque has not been validated.
-No unattended real-hardware endurance test is authorized. Fault reset, reconnect, startup,
-GUI reconnect and lease recovery never automatically enable, home, move or resume.
-
-## Remaining evidence request by gate
-
-Start with existing files and safely accessible exterior labels. These are information
-requests, **not permission to power equipment, open an energized enclosure, touch live
-wiring, connect a commissioning tool, change a parameter or test a brake**. If access needs
-isolation or enclosure opening, stop and use a qualified person and approved isolation
-procedure. Separately authorize any powered observation. Redact serial numbers, asset IDs,
-hostnames and private network details; credentials, tokens and private keys are not needed.
-
-### Gate B blockers — smallest remaining set
-
-| Priority | What / usual location | Why needed | Power / read-only / qualification / redaction |
-|---|---|---|---|
-| 1 | Current drive nameplate and firmware/version record, plus a complete communication section explicitly mapping U monitor/status reads | Match the supplied chapters to the installed drive and resolve U41.0A FC/area/address/read conditions | Exterior label/existing record can be unpowered/read-only; any new display observation needs separate powered authorization and approved restraint. Qualified person if enclosure access is needed. Redact serial number. |
-| 2 | Current adapter front/back label and existing as-built schematic or isolated RS485 +, -, GND/PE/custom-cable evidence | Match N5 to the installed revision and confirm grounding, termination/bias and exact safe wiring | Unpowered files/photos preferred. Isolate equipment; qualified electrical person for wiring/enclosure inspection. No rewiring. Redact asset IDs. |
-| 3 | Existing current C0A.00/.01/.02/.03/.06 records and independently recorded Servo Disabled/safe-energization and gravity/brake restraint review | Establish installed settings, timeout basis and the safe non-motion precondition | Existing records need no power. New keypad/state observation is powered, read-only, separately authorized and attended; qualified safety/electrical review required. Change no parameter. |
-
-### Gate C blockers
-
-- Applicable manufacturer evidence resolving U40/U41 addressing and the U40.01
-  I16-versus-32-bit conflict. Supplying documents needs no equipment power.
-- Existing current C0A.06 setting and independent static display values for each proposed
-  field. New observations are powered/read-only and require the same separate authorization,
-  restraint and qualified review as Gate B. Do not change values.
-- Later, separately authorized bounded repeatability/freshness captures. No capture is
-  requested or permitted in Milestone 6.
-
-### Gate D blockers
-
-- Existing qualified electrical/mechanical review and as-built E-stop,
-  STO/enable/contactor, PL/NL/HSW, brake and gravity-load documentation.
-- Installed gearbox/coupling, direction, hard stops, safe travel, zero and calibration
-  evidence. Prefer existing records/unpowered isolated photos; no energized inspection,
-  switch test or motion is requested.
-- Redact serials/asset identifiers. Qualified personnel are required for enclosure,
-  wiring and safety conclusions. None of these requests authorizes motion.
-
-## First-read candidate decision
-
-**No first-read candidate can yet be approved.** `SERVO_STATUS` / U41.0A remains the
-preferred type because the parameter table describes it as U16, read-only, raw status 0-3,
-meaningful without motion and independently displayable. N1 does not explicitly map U
-labels or establish their FC/area/address/read conditions or lack of side effects.
-Therefore `0x410A`, FC03 and one word cannot be approved as a physical request. No C entry
-in the current catalog is both documentary read-only and harmless status.
-
-## Smallest safe next milestone
-
-Milestone 7 proposal: **offline closure of remaining Gate B evidence only**. Review the
-three Gate B evidence packages above and reassess the exact U16 candidate. Do not implement
-an adapter, discover devices, connect hardware, change settings or read a register. Gate B
-remains blocked unless every mandatory condition passes. Milestone 7 is not started.
+At Stop Point C preserve results and review them before proposing any later access.
+Completion of Session 1 does not authorize motion.

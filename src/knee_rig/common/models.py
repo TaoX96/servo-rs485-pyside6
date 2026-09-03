@@ -39,6 +39,21 @@ class HomingState(StrEnum):
     HOMING_FAULT = "HOMING_FAULT"
 
 
+class HomingStrategy(StrEnum):
+    POSITIVE_LIMIT_REFERENCE = "POSITIVE_LIMIT_REFERENCE"
+
+
+class HomingPhase(StrEnum):
+    IDLE = "IDLE"
+    SEARCHING_POSITIVE_LIMIT = "SEARCHING_POSITIVE_LIMIT"
+    CONTROLLED_STOP_AT_LIMIT = "CONTROLLED_STOP_AT_LIMIT"
+    BACKING_OFF_POSITIVE_LIMIT = "BACKING_OFF_POSITIVE_LIMIT"
+    APPLYING_HOME_OFFSET = "APPLYING_HOME_OFFSET"
+    VERIFYING_COMPLETION = "VERIFYING_COMPLETION"
+    COMPLETE = "COMPLETE"
+    FAULT = "FAULT"
+
+
 class MotionState(StrEnum):
     IDLE = "IDLE"
     STARTING = "STARTING"
@@ -68,6 +83,8 @@ class ServoStatus:
     servo: ServoState = ServoState.SERVO_DISABLED
     homing: HomingState = HomingState.UNHOMED
     motion: MotionState = MotionState.IDLE
+    homing_strategy: HomingStrategy = HomingStrategy.POSITIVE_LIMIT_REFERENCE
+    homing_phase: HomingPhase = HomingPhase.IDLE
     limits: LimitInputState = LimitInputState()
     active_fault_code: str | None = None
 
@@ -79,6 +96,8 @@ class StateSnapshot:
     servo: ServoState
     homing: HomingState
     motion: MotionState
+    homing_strategy: HomingStrategy = HomingStrategy.POSITIVE_LIMIT_REFERENCE
+    homing_phase: HomingPhase = HomingPhase.IDLE
     limits: LimitInputState = LimitInputState()
     active_fault_code: str | None = None
     active_command_id: UUID | None = None
@@ -102,6 +121,8 @@ class StateSnapshot:
             "connection": self.connection.value,
             "servo": self.servo.value,
             "homing": self.homing.value,
+            "homing_strategy": self.homing_strategy.value,
+            "homing_phase": self.homing_phase.value,
             "motion": self.motion.value,
             "limits": self.limits.to_dict(),
             "active_fault_code": self.active_fault_code,

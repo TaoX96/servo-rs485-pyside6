@@ -41,6 +41,7 @@ OPERATIONAL_READS: Final = frozenset(
         "POSITION_FEEDBACK",
         "SPEED_FEEDBACK",
         "TORQUE_FEEDBACK",
+        "DI_STATUS",
         "BUS_VOLTAGE",
         "POSITION_DEVIATION",
         "MOTOR_TEMPERATURE",

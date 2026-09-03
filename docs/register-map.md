@@ -2,15 +2,15 @@
 
 This is design evidence for the future Raspberry Pi motion service. Milestone 4 composes
 the pure codec/catalog with an offline fake transport and symbolic read-only reader. The
-Windows GUI must never use this map or access registers. No real register access exists
-through Milestone 6. Future operator API operations remain high-level and allowlisted;
+Windows GUI must never use this map or access registers. Milestone 7 adds only a manually
+invoked, Pi-only, one-shot diagnostic for three U16 symbols. Future operator API operations remain high-level and allowlisted;
 this table must not be exposed as a general-purpose register interface.
 
 All entries must be verified against the supplied A6-RS parameter-list PDF and the exact
 installed firmware. Numeric notation is retained from the historical project map; some
 entries occur in legacy Python, others only in current repository documentation. See the
 [evidence matrix](evidence-matrix.md) for per-field provenance, every current
-14-entry catalog item, communication gaps and the dedicated address comparison.
+15-entry catalog item, communication gaps and the dedicated address comparison.
 
 The historical-code communication baseline is Modbus RTU, slave 1, 9600 baud, 8 data bits,
 no parity, 1 stop bit, and a 1 second host timeout, not a confirmed current configuration.
@@ -23,11 +23,13 @@ The supplied parameter-list communication table (PDF pp. 36–37, printed 276–
 C0A.06 selectable
 word order: 0 low 16 bits first (default), 1 high 16 bits first. It does not establish the
 installed setting. The Milestone 6 Chapter 9 excerpt documents high byte then low byte in
-each 16-bit word, FC03 for C-parameter reads and C group/suffix bytes as the PDU address,
+each 16-bit word, FC03 for parameter reads and group/suffix bytes as the PDU address,
 with no +/-1 adjustment. Its default baud is 115200, while legacy code selected 9600.
-Installed model/firmware/settings, U-monitor FC/area/mapping and genuine captures remain
-unresolved. Gates B/C/D remain blocked;
-the [future commissioning design](read-only-commissioning.md) is not permission to read.
+Together with the U16/RO parameter-list entries, this supports FC03 addresses `0x4004`,
+`0x4108`, and `0x410A` for the narrow diagnostic. Installed model/firmware/settings and
+genuine captures remain unresolved. Gate B is prepared/conditional; Gates C/D remain
+blocked. The [commissioning procedure](read-only-commissioning.md) is not permission to
+read.
 
 ## Primitive and layout model
 
@@ -49,13 +51,14 @@ Manual labels such as `C11.06` and `U41.0A`, parameter group/index notation, num
 runtime addresses, and transport-library addresses are distinct. Catalog numeric values
 preserve the historical project map exactly. The codec neither derives an address from a
 manual label nor adds or subtracts one. For documented C parameters, direct PDU
-group/offset mapping is now supported with no one-based adjustment. U-monitor and
-MinimalModbus conventions remain unresolved; no adapter may introduce an automatic offset.
+group/offset mapping is supported with no one-based adjustment. The three selected U16
+monitor symbols use the same documented parameter rule. MinimalModbus conventions remain
+historical; no adapter may introduce an automatic offset.
 
-The existing metadata string "historical zero-based runtime address" is now supported only
-for the catalog's documented C parameters at the PDU layer. It remains unsupported for U
-monitors and as a MinimalModbus convention. No source metadata was changed in this audit;
-object-style homing notation must not be converted to RTU addresses without evidence.
+The metadata string "historical zero-based runtime address" remains historical. The three
+diagnostic entries explicitly identify FC03 parameter area and direct group/offset PDU
+addresses. Object-style homing notation must not be converted to RTU addresses without
+evidence.
 
 ## Evidence and verification states
 
@@ -65,8 +68,9 @@ object-style homing notation must not be converted to RTU addresses without evid
 - `AMBIGUOUS`: documentary sources conflict or are incomplete.
 - `HARDWARE_VERIFICATION_REQUIRED`: metadata requires exact-drive confirmation.
 
-Current catalog entries use `HARDWARE_VERIFICATION_REQUIRED`, principally because installed
-applicability, U-monitor addressing and the active 32-bit word order have not been verified.
+Most catalog entries use `HARDWARE_VERIFICATION_REQUIRED`, principally because installed
+applicability and active 32-bit word order have not been verified. The three one-word
+diagnostic entries are `MANUAL_CONFIRMED`, which does not imply current hardware verification.
 `U40.01` is explicitly
 ambiguous: the manual table identifies I16 while nearby prose calls it a 32-bit integer.
 
@@ -81,7 +85,7 @@ electronic gearing 9/16384 is not a joint calibration.
 
 The immutable operational read allowlist contains `SERVO_STATUS`, `POSITION_FEEDBACK`,
 `SPEED_FEEDBACK`, `TORQUE_FEEDBACK`, `BUS_VOLTAGE`, `POSITION_DEVIATION`,
-`MOTOR_TEMPERATURE`, `ENCODER_TEMPERATURE`, and `PLAN_OPERATION_GROUP`.
+`MOTOR_TEMPERATURE`, `ENCODER_TEMPERATURE`, `PLAN_OPERATION_GROUP`, and `DI_STATUS`.
 
 The separate engineering inspection allowlist contains `POSITION_REFERENCE_SELECTION`,
 `GEAR_1_NUMERATOR`, `GEAR_1_DENOMINATOR`, and `PLAN_MODE`. Engineering permission is
@@ -90,8 +94,9 @@ strictly boolean and disabled by default; granting it never enables writing. The
 only, even when engineering inspection is enabled. Unknown symbols and unresolved
 addresses fail closed. Reader callers cannot supply addresses, offsets, or function codes.
 
-All catalog areas/function-code mappings remain `UNRESOLVED`. The only supported override
-is explicit `OfflineFixtureInterpretation` for the `synthetic-offline-fixture` source,
+Except for the three Milestone 7 U16 diagnostic entries, catalog areas/function-code
+mappings remain `UNRESOLVED`. The offline reader's supported override is explicit
+`OfflineFixtureInterpretation` for the `synthetic-offline-fixture` source,
 using area `OFFLINE_FIXTURE`. This does not establish a real register area or addressing
 convention. No default hardware byte layout or address offset is inferred.
 
@@ -107,7 +112,7 @@ scalar or selected layout. This does not resolve the conflicting 32-bit prose; i
 is `AMBIGUOUS` and the snapshot is degraded. No genuine raw capture is supplied or claimed;
 test words are explicitly synthetic, including non-symmetric positive/negative patterns.
 
-Snapshots default to the nine operational symbols, in deterministic sorted order. They
+Snapshots default to the ten operational symbols, in deterministic sorted order. They
 retain successful fields and explicit per-field error codes, marking overall validity
 `DEGRADED` for any failure or ambiguity. A smaller non-ambiguous successful selection is
 `FIXTURE_VALID`. Missing, stale or failed fields are never zero-filled or reused from a
@@ -134,7 +139,7 @@ workflow and no register write.
 
 ### Broader historical design table — not the executable catalog or a read allowlist
 
-The table below retains earlier design entries. Only the 14 entries audited in
+The table below retains earlier design entries. Only the 15 entries audited in
 evidence-matrix.md exist in the current executable catalog. Numeric values here are not
 approved transport addresses, and documentary RW access does not authorize writes.
 
@@ -170,6 +175,7 @@ approved transport addresses, and documentary RW access does not authorize write
 | GROUP_2_WAIT_TIME | 0x1118 | U32 | ms | C11.18 |
 | SPEED_FEEDBACK | 0x4001 | I16, ambiguous | rpm, RO | U40.01; table says I16; prose says 32-bit |
 | TORQUE_FEEDBACK | 0x4003 | I16 | 0.1%, RO | U40.03 |
+| DI_STATUS | 0x4004 | U16 | raw DI1-DI8 electrical levels, RO | U40.04 |
 | BUS_VOLTAGE | 0x4006 | U16 | 0.1 V, RO | U40.06 |
 | POSITION_DEVIATION | 0x4010 | I32 | encoder pulses, RO | U40.10 |
 | POSITION_FEEDBACK | 0x4016 | I32 | application unit, RO | U40.16 |
@@ -182,7 +188,7 @@ Groups 3 and 4 used by the legacy Jog code follow C11.20 and C11.30. Add them on
 after verifying the intended Jog behavior and correcting the legacy forward-function typo.
 
 Homing registers remain absent from the executable catalog until the exact model/firmware
-manual, selected homing mode, HSW/PL/NL wiring, data types, units, and write conditions
+manual, selected mode 18, PL/NL wiring, data types, units, and write conditions
 have been verified.
 Engineering parameter writes require Servo Off, explicit authorization, a logged reason,
 backup, and read-back verification.

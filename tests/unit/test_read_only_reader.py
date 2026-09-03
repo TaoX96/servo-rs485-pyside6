@@ -79,7 +79,7 @@ def test_explicit_synthetic_decode_preserves_words_and_never_claims_hardware_tru
     assert result.raw.words == words
     assert result.raw.sequence == 1
     assert result.raw.acquired_at == ManualClock().wall_time
-    assert result.raw.catalog_area is RegisterArea.UNRESOLVED
+    assert result.raw.catalog_area is get_register(symbol).area
     assert result.layout_verification is LayoutVerification.HARDWARE_UNVERIFIED
     assert result.validity is ReadValidity.FIXTURE_VALID
     assert transport.history[0].address == get_register(symbol).address
@@ -196,9 +196,13 @@ def test_override_mapping_is_immutable_and_permission_is_strict() -> None:
         ReadOnlyServoReader(
             FakeReadOnlyTransport({}), ManualClock(), engineering_read_permission=cast(bool, "true")
         )
+    documented = {"DI_STATUS", "PLAN_OPERATION_GROUP", "SERVO_STATUS"}
+    assert all(
+        get_register(symbol).area is RegisterArea.MODBUS_PARAMETER_FC03 for symbol in documented
+    )
     assert all(
         get_register(symbol).area is RegisterArea.UNRESOLVED
-        for symbol in OPERATIONAL_READS | ENGINEERING_READS
+        for symbol in (OPERATIONAL_READS | ENGINEERING_READS) - documented
     )
 
 

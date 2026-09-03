@@ -18,6 +18,7 @@ from knee_rig.common.models import (
     ErrorCode,
     HomePayload,
     HomingState,
+    HomingStrategy,
     MotionState,
     ResetFaultPayload,
     ResumePayload,
@@ -148,8 +149,29 @@ class StateAuthorizer:
             return self._reject(ErrorCode.OPERATION_ACTIVE, "Motion is already active.")
         if state.homing is HomingState.HOMING:
             return self._reject(ErrorCode.OPERATION_ACTIVE, "Homing is already active.")
+        if state.limits.pl_active:
+            return self._reject(
+                ErrorCode.ACTIVE_LIMIT,
+                "PL is active at homing start and no recovery sequence is authorized.",
+            )
         if payload.timeout_ticks <= 0:
             return self._reject(ErrorCode.VALIDATION_FAILED, "timeout_ticks must be positive.")
+        homing = config.homing
+        if (
+            homing.strategy is not HomingStrategy.POSITIVE_LIMIT_REFERENCE
+            or homing.search_direction != 1
+            or homing.search_speed_units_per_tick <= 0
+            or homing.backoff_speed_units_per_tick <= 0
+            or homing.search_distance_units <= 0
+            or homing.backoff_distance_units <= 0
+            or homing.home_offset_units >= 0
+            or homing.search_timeout_ticks <= 0
+            or homing.backoff_timeout_ticks <= 0
+        ):
+            return self._reject(
+                ErrorCode.VALIDATION_FAILED,
+                "Positive-limit homing configuration is incomplete or incorrectly signed.",
+            )
         return AuthorizationDecision(True)
 
     def _authorize_single_move(

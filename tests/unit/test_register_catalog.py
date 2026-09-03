@@ -36,6 +36,7 @@ def test_catalog_and_specs_are_immutable() -> None:
 def test_verification_and_engineering_classification_are_preserved() -> None:
     for spec in list_registers():
         assert spec.verification in {
+            VerificationStatus.MANUAL_CONFIRMED,
             VerificationStatus.AMBIGUOUS,
             VerificationStatus.HARDWARE_VERIFICATION_REQUIRED,
         }

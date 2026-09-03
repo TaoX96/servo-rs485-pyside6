@@ -1,7 +1,7 @@
 # Suggested prompts for future milestones
 
-Give Codex one explicitly approved milestone at a time. Milestone 6 audits supplied local
-evidence; it does not authorize real transport, hardware access, or Milestone 7.
+Give Codex one explicitly approved milestone at a time. Milestone 7 prepares a supervised
+read-only laboratory session; it does not authorize hardware access or motion by itself.
 
 ## Completed Milestone 1 - contracts and simulation
 
@@ -46,12 +46,15 @@ and direct group/offset PDU addressing for C parameters; U-monitor mapping and i
 identity/settings/wiring remain unresolved. Gate B remains blocked and no first read is
 approved. No code, device or network access was introduced.
 
-## Proposed Milestone 7 - remaining Gate B evidence closure (not started)
+## Completed Milestone 7 - laboratory commissioning preparation
 
-Review only installed nameplate/firmware, adapter/as-built wiring, current communication
-settings/safe disabled-restraint record and applicable U-monitor mapping. Reassess U41.0A
-without implementing an adapter or accessing hardware. Do not begin without explicit user
-authorization.
+Implemented a Pi-only one-shot FC03 diagnostic restricted to `SERVO_STATUS`,
+`PLAN_OPERATION_GROUP`, and `DI_STATUS`, with config-only preview, exact by-id path,
+explicit arming, raw-frame/timing/error reporting, zero retry, and guaranteed close. It is
+isolated from GUI startup. Added Session 1 machine checklists and deterministic
+`POSITIVE_LIMIT_REFERENCE` simulation with explicit search, controlled-stop, backoff,
+offset, verification, and fault phases. No hardware was accessed; no writes or real
+motion path were added.
 
 ## Later commissioning milestones
 

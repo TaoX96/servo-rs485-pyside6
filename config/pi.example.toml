@@ -26,6 +26,11 @@ stop_bits = 1
 timeout_s = 1.0
 byteorder_32 = "unverified"
 legacy_byteorder_hypothesis = "little"
+# Zero means that the installed DI assignment has not been recorded.
+pl_input_number = 0
+nl_input_number = 0
+pl_active_level = "unverified"
+nl_active_level = "unverified"
 
 [monitoring_service]
 bind_host = "127.0.0.1"
@@ -37,4 +42,3 @@ media_directory = ""
 
 [logging]
 directory = ""
-

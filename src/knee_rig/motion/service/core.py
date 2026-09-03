@@ -159,6 +159,8 @@ class MotionCoordinator:
             servo=servo_status.servo,
             homing=servo_status.homing,
             motion=servo_status.motion,
+            homing_strategy=servo_status.homing_strategy,
+            homing_phase=servo_status.homing_phase,
             limits=servo_status.limits,
             active_fault_code=self._service_fault_code or servo_status.active_fault_code,
             active_command_id=self._active_command_id,

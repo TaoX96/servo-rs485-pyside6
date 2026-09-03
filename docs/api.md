@@ -72,7 +72,7 @@ status. Long-running command status is available at
 |---|---|---|
 | `enable_servo` | Service available, servo disabled, motion idle, feature enabled, explicit confirmation, and commissioned safety gates satisfied. | Confirmed enabled feedback without motion. |
 | `disable_servo` | Service available and motion idle; moving systems require controlled stop first. | Confirmed disabled feedback. |
-| `home` | Servo enabled, unhomed, idle, homing allowed, bounded parameters, and verified safety/homing configuration. | All homing completion conditions are satisfied. |
+| `home` | Servo enabled, unhomed, idle, selected `POSITIVE_LIMIT_REFERENCE`, PL inactive, PL/NL consistent, homing allowed, bounded parameters, and verified safety/homing configuration. | Controlled stop at PL confirmed, PL cleared during negative backoff, negative offset complete, and stable completion verified. |
 | `start_single_move` | Servo enabled, homed, idle, motion allowed, calibration verified, and target/rate values within configured limits. | Confirmed terminal state and expected position. |
 | `start_cycle` | Same gates as a single move plus a positive bounded cycle count and validated waits. | Requested finite count confirmed by software-side completed-cycle tracking. |
 | `pause` | Motion running and drive behavior for pause has been verified. | Confirmed paused/non-advancing state. |

@@ -1,8 +1,9 @@
-# Evidence matrix through Milestone 6
+# Evidence matrix through Milestone 7
 
-Latest audit: 2026-09-02. Scope: local documentary analysis only. Current safety level:
-**Simulation**. No device was inspected, enumerated, contacted, read, or written. No
-legacy code was imported or executed. Nothing here authorizes hardware access.
+Latest audit: 2026-09-03. Current safety level: **Controlled read-only commissioning
+preparation**. No device was inspected, enumerated, contacted, read, or written in this
+milestone. No legacy code was imported or executed. Nothing here authorizes hardware
+access or motion.
 
 ## Evidence vocabulary
 
@@ -11,7 +12,7 @@ physical verification, and permission to operate are separate dimensions.
 
 | Level | Meaning |
 |---|---|
-| `PHYSICAL_DEVICE_VERIFIED` | Recorded observation of the identified installed device under an approved procedure. No claim receives this level through Milestone 6. |
+| `PHYSICAL_DEVICE_VERIFIED` | Recorded observation of the identified installed device under an approved procedure. No claim receives this level through Milestone 7. |
 | `USER_CONFIRMED` | Identity explicitly reported by the user without physical evidence inspected in this audit; not physical verification. |
 | `EXACT_MODEL_MANUAL_CONFIRMED` | Manufacturer statement matched to the exact target model and firmware applicability. No such match is currently established. |
 | `SERIES_MANUAL_CONFIRMED` | Statement in supplied manufacturer family/product documentation; exact installed target applicability unconfirmed. |
@@ -23,9 +24,66 @@ physical verification, and permission to operate are separate dimensions.
 | `MISSING` | Required evidence is absent from the supplied local materials. |
 | `HARDWARE_VERIFICATION_REQUIRED` | Open physical verification obligation, which may coexist with documentary support. |
 
-The existing catalog enum `MANUAL_CONFIRMED` must be read as documentary, not physical,
-confirmation. Its `AMBIGUOUS` state includes the speed-width conflict below. This audit
-does not change enums, metadata, allowlists, fixtures, or configuration.
+The catalog enum `MANUAL_CONFIRMED` means documentary rather than physical confirmation.
+Milestone 7 changes the three U16 diagnostic entries described below; historical sections
+remain as an audit trail and do not control the current allowlist.
+
+## Milestone 7 controlling reassessment
+
+| Evidence class | Milestone 7 use and limit |
+|---|---|
+| Manual evidence | Manufacturer family documents support the three U16/RO mappings, FC03 framing, DI raw-bit layout, and positive-limit mode 18; installed applicability is unverified. |
+| Historical LabVIEW evidence | User-confirmed successful control establishes that the drive/RS485 method operated previously; the unavailable VI export does not erase that history. |
+| Source-code evidence | Protected legacy Python records RTU/slave/serial assumptions and write-oriented symbols; it was inspected as text only and cannot prove current settings or reads. |
+| Synthetic test evidence | Offline frames, faults, cleanup, state phases, and GUI boundaries are deterministic tests; they are not drive observations. |
+| Genuine Raspberry Pi raw captures | None exist at completion of Milestone 7. |
+| Current installed-hardware verification | None was performed in Milestone 7; all such facts await the supervised observation record. |
+
+The communication manual states that parameters are read with FC03 and constructs the
+PDU address from the parameter group and offset bytes. The parameter list identifies
+`U40.04`, `U41.08`, and `U41.0A` as U16/read-only parameters. Taken together, these are
+sufficiently specific for the fixed first-session diagnostic. The conclusion is
+documentary and does not claim installed applicability.
+
+| Symbol | Manual evidence | Diagnostic mapping | Current conclusion |
+|---|---|---|---|
+| `SERVO_STATUS` | U41.0A, U16, RO; raw states 0 not ready, 1 ready, 2 running, 3 fault | FC03, address `0x410A`, count 1 | Selected first read; confirmed by documentation |
+| `PLAN_OPERATION_GROUP` | U41.08, U16, RO | FC03, address `0x4108`, count 1 | Allowlisted optional read; confirmed by documentation |
+| `DI_STATUS` | U40.04, U16, RO; DI1-DI8 raw electrical levels; example `0xFFFE` means DI1 low and DI2-DI8 high | FC03, address `0x4004`, count 1 | Allowlisted raw observation; confirmed by documentation; installed DI assignment/polarity unresolved |
+
+The manual's word example supports DI1 at bit 0 through DI8 at bit 7. It exposes raw
+electrical levels, not the configured meaning of PL/NL. The tool may identify a selected
+raw bit only when the installed DI number is recorded. It reports
+`ACTIVE_LEVEL_UNVERIFIED` until polarity is verified and never writes the assignment or
+polarity parameters.
+
+Historical successful LabVIEW control is accepted as evidence that this drive/RS485
+method worked previously. The historical project report and source support slave 1,
+9600/8N1, RTU, MinimalModbus, and a USB-RS485 workflow. This is **supported by historical
+operation**, not a current Pi capture, present wiring check, or proof of current settings.
+Legacy source was read as text only and contains writes; it was never imported or run.
+
+### Gate B item-by-item status
+
+| Gate B item | Status |
+|---|---|
+| FC03 parameter read, group/offset address construction, U16 width/access for the three symbols | **Confirmed by documentation** |
+| Previous drive/RS485 operation and 9600/8N1/slave-1 baseline | **Supported by historical operation** |
+| Installed model/firmware, adapter, wiring, settings, Servo Disabled/restraint condition, DI assignments/polarity, exact Pi by-id path | **Unresolved** |
+| Current Raspberry Pi request/response capture | **Unresolved**; no genuine raw capture exists |
+| Any installed-hardware fact | **Not verified on current hardware** |
+| Joint calibration, homing speeds/distances/offset, motion limits, HSW, encoder index | **Not required for the first read-only test** |
+
+Gate B is therefore **prepared/conditional for Session 1**, rather than globally blocked
+by motion-stage questions. Stop Points A/B and explicit authorization for the exact
+configured one-shot request remain mandatory. Gates C and D remain blocked.
+
+The position-mode manual documents drive-internal positive-limit homing modes 2 and 18.
+Mode 18 uses the PL transition as home and does not search for an encoder Z pulse. This
+supports the selected future `POSITIVE_LIMIT_REFERENCE` design at family-manual level;
+installed firmware applicability, mode configuration, DI assignment/polarity, speeds,
+distances, offset, and completion feedback remain unresolved. It authorizes no motion or
+register write.
 
 ## Milestone 6 intake and controlling conclusions
 

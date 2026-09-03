@@ -6,7 +6,7 @@ from collections import deque
 from dataclasses import replace
 from uuid import UUID, uuid4
 
-from knee_rig.common.config import AppConfig, FeatureConfig, LimitsConfig
+from knee_rig.common.config import AppConfig, FeatureConfig, HomingConfig, LimitsConfig
 from knee_rig.common.config.models import MotionServiceConfig, default_config
 from knee_rig.common.models import (
     AlarmInfo,
@@ -45,6 +45,17 @@ def simulation_gui_config() -> AppConfig:
             calibration_verified=False,
         ),
         limits=replace(LimitsConfig(), max_cycle_count=10),
+        homing=HomingConfig(
+            search_direction=1,
+            search_speed_units_per_tick=1.0,
+            backoff_speed_units_per_tick=1.0,
+            search_distance_units=5.0,
+            backoff_distance_units=2.0,
+            home_offset_units=-2.0,
+            search_timeout_ticks=8,
+            backoff_timeout_ticks=4,
+            drive_internal_mode=18,
+        ),
         motion_service=MotionServiceConfig(control_lease_ttl_s=300.0),
     )
 
@@ -57,7 +68,7 @@ class InProcessSimulationClient:
         if not self._config.features.simulation:
             raise ValueError("InProcessSimulationClient requires simulation mode")
         self._clock = ManualClock()
-        self._servo = FakeServo(clock=self._clock)
+        self._servo = FakeServo(clock=self._clock, homing_config=self._config.homing)
         self._coordinator = MotionCoordinator(self._config, self._servo)
         self._authorizer = StateAuthorizer()
         self._lease_id: UUID | None = None
@@ -208,12 +219,18 @@ class InProcessSimulationClient:
         elif fault is SimulationFault.DRIVE_FAULT:
             self._servo.inject_drive_fault()
             message = "Simulated drive fault injected."
-        elif fault is SimulationFault.HSW_NOT_FOUND:
-            self._servo.set_next_homing_failure(HomingFailure.HSW_NOT_FOUND)
-            message = "The next simulated homing operation is armed for HSW-not-found failure."
         elif fault is SimulationFault.HOMING_TIMEOUT:
             self._servo.set_next_homing_failure(HomingFailure.TIMEOUT)
-            message = "The next simulated homing operation is armed to time out."
+            message = "The next simulated PL search is armed to time out."
+        elif fault is SimulationFault.PL_NEVER_FOUND:
+            self._servo.set_next_homing_failure(HomingFailure.PL_NEVER_FOUND)
+            message = "The next simulated homing operation is armed for PL-not-found failure."
+        elif fault is SimulationFault.PL_STUCK_ACTIVE:
+            self._servo.set_next_homing_failure(HomingFailure.PL_STUCK_ACTIVE)
+            message = "The next simulated homing operation is armed for PL-stuck-active failure."
+        elif fault is SimulationFault.BACKOFF_TIMEOUT:
+            self._servo.set_next_homing_failure(HomingFailure.BACKOFF_TIMEOUT)
+            message = "The next simulated homing operation is armed for backoff timeout."
         elif fault is SimulationFault.PL_ACTIVE:
             limits = self._coordinator.state.limits
             self._servo.set_limits(pl_active=True, nl_active=False, hsw_active=limits.hsw_active)

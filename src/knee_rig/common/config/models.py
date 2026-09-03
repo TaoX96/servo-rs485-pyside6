@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal
 
+from knee_rig.common.models import HomingStrategy
+
 
 @dataclass(frozen=True, slots=True)
 class FeatureConfig:
@@ -69,6 +71,27 @@ class SerialConfig:
     timeout_s: float = 1.0
     byteorder_32: str = "unverified"
     legacy_byteorder_hypothesis: str = "little"
+    pl_input_number: int = 0
+    nl_input_number: int = 0
+    pl_active_level: str = "unverified"
+    nl_active_level: str = "unverified"
+
+
+@dataclass(frozen=True, slots=True)
+class HomingConfig:
+    strategy: HomingStrategy = HomingStrategy.POSITIVE_LIMIT_REFERENCE
+    search_direction: int = 1
+    search_speed_units_per_tick: float = 0.0
+    backoff_speed_units_per_tick: float = 0.0
+    search_distance_units: float = 0.0
+    backoff_distance_units: float = 0.0
+    home_offset_units: float = 0.0
+    search_timeout_ticks: int = 0
+    backoff_timeout_ticks: int = 0
+    drive_internal_mode: int = 18
+    pl_polarity_verified: bool = False
+    nl_polarity_verified: bool = False
+    installed_drive_internal_mode_verified: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +138,7 @@ class AppConfig:
     logging: LoggingConfig = LoggingConfig()
     motion_service: MotionServiceConfig = MotionServiceConfig()
     serial: SerialConfig = SerialConfig()
+    homing: HomingConfig = HomingConfig()
     monitoring_service: MonitoringServiceConfig = MonitoringServiceConfig()
     motion_api: MotionApiConfig = MotionApiConfig()
     monitoring_api: MonitoringApiConfig = MonitoringApiConfig()
